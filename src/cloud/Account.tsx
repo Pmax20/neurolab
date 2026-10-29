@@ -30,7 +30,7 @@ function PasswordField({ value, onChange, label, auto }: { value: string; onChan
 }
 
 /** Karte in den Einstellungen: anmelden, registrieren, Passwort, Status. */
-export function AccountCard() {
+export function AccountCard({ gate = false }: { gate?: boolean }) {
   const c = useCloud();
   const [mode, setMode] = useState<'anmelden' | 'registrieren' | 'vergessen'>('anmelden');
   const [email, setEmail] = useState('');
@@ -105,8 +105,8 @@ export function AccountCard() {
 
   return (
     <section className="card">
-      <h3>Konto und Synchronisierung</h3>
-      <p>Mit einem Konto ist dein Lernstand auf jedem Gerät da – Laptop, Handy, Tablet. Ohne Konto bleibt er nur in diesem Browser. Was du hier schon gelernt hast, wird beim ersten Anmelden übernommen und mit dem Stand im Konto zusammengeführt.</p>
+      <h3>{gate ? 'Bitte melde dich an' : 'Konto und Synchronisierung'}</h3>
+      <p>{gate ? 'NeuroLab ist nur mit Konto nutzbar. Dein Lernstand ist dann auf jedem Gerät da – Laptop, Handy, Tablet – und funktioniert nach dem Anmelden auch offline.' : 'Mit einem Konto ist dein Lernstand auf jedem Gerät da – Laptop, Handy, Tablet. Ohne Konto bleibt er nur in diesem Browser.'} Was in diesem Browser schon gespeichert ist, wird beim ersten Anmelden übernommen und mit dem Stand im Konto zusammengeführt.</p>
       <div className="seg" role="tablist" aria-label="Konto" style={{ marginBottom: 10 }}>
         {([['anmelden', 'Anmelden'], ['registrieren', 'Konto anlegen'], ['vergessen', 'Passwort vergessen']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={mode === k} onClick={() => { setMode(k); setMsg(null); }}>{l}</button>)}
       </div>
@@ -119,5 +119,17 @@ export function AccountCard() {
       {msg && <div className={`notice ${msg.ok ? 'info' : 'danger'}`} role="status" style={{ marginTop: 10 }}>{msg.text}</div>}
       <p className="muted" style={{ fontSize: '0.85rem', marginBottom: 0 }}>Gespeichert werden deine E-Mail-Adresse und dein Lernstand (Antworten, Wiederholungsplan, Karteikarten, Einstellungen, Notizen) bei Supabase in Frankfurt. Eigene Präparat-Fotos bleiben vorerst nur auf dem jeweiligen Gerät.</p>
     </section>
+  );
+}
+
+/** Vollbild vor der App: ohne Anmeldung kein Zugang. */
+export function LoginGate({ loading = false }: { loading?: boolean }) {
+  return (
+    <div className="login-gate">
+      <div className="login-box stack">
+        <div className="brand" style={{ fontSize: '1.4rem', justifyContent: 'center' }}>NeuroLab</div>
+        {loading ? <p className="muted" style={{ textAlign: 'center' }} aria-live="polite">Anmeldung wird geprüft …</p> : <AccountCard gate />}
+      </div>
+    </div>
   );
 }

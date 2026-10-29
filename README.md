@@ -78,3 +78,4 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   der Wiederholungsplan einer Aufgabe kommt vom Gerät mit der jüngsten Antwort, Karteikarten von der zuletzt bewerteten Fassung;
   Einstellungen, Notizen und Listen vom zuletzt geänderten Gerät. „Alle Daten löschen“ leert angemeldet auch den gesicherten Stand.
 - Anmeldung mit E-Mail und Passwort (PKCE-Ablauf, damit Mail-Links mit dem Hash-Routing funktionieren).
+- Zugang nur mit Konto: Ohne Anmeldung zeigt die App nur die Anmeldeseite (`LoginGate` in `src/cloud/Account.tsx`). Das ist eine Zugangssperre für die Oberfläche; Lerninhalte und Quellcode selbst sind öffentlich abrufbar, Kims Lernstand ist durch die Datenbankregeln geschützt.

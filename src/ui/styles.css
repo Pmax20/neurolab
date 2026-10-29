@@ -432,3 +432,6 @@ ul.rows, .rows li { max-width: none; }
 .word-parts .part { padding: 4px 10px; border-radius: 8px; background: var(--accent-soft); }
 .own-slide img { max-width: 100%; max-height: 420px; border-radius: 10px; display: block; margin: 0 auto; }
 .field input[type='email'], .field input[type='password'], .field input[type='text'] { width: 100%; }
+.login-gate { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; background: var(--bg); }
+.login-box { width: 100%; max-width: 520px; }
+.login-box .card form { max-width: none !important; }

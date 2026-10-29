@@ -8,7 +8,8 @@ import { ExperimentsPage, SimPage } from './pages/Experiments';
 import { AnalyticsPage, ExamPage } from './pages/Exam';
 import { ImportPage, PathsPage, ReviewPage, SettingsPage, SourcesPage, FactcheckPage } from './pages/Manage';
 import { Tour } from './ui/Tour';
-import { CloudBadge } from './cloud/Account';
+import { CloudBadge, LoginGate } from './cloud/Account';
+import { useCloud } from './cloud/sync';
 
 class Boundary extends Component<{ children: ReactNode; resetKey: string }, { err: Error | null }> {
   state = { err: null as Error | null };
@@ -60,6 +61,12 @@ export function App() {
   useEffect(() => { document.documentElement.classList.toggle('reduced', reduced === 'an'); }, [reduced]);
   useEffect(() => { setNavOpen(false); }, [path.join('/')]);
   useEffect(() => { if (!tourDone && !navigator.webdriver) setTour(true); }, []); // eslint-disable-line
+  const cloud = useCloud();
+  // Zugang nur mit Konto (solange die Datenbank eingerichtet ist)
+  if (cloud.status !== 'aus') {
+    if (!cloud.ready) return <LoginGate loading />;
+    if (!cloud.email || cloud.recovery) return <LoginGate />;
+  }
   const key = path.join('/');
   const cur = path[0] ?? '';
   let page: ReactNode;

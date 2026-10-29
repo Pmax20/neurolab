@@ -168,6 +168,8 @@ export function startCloud() {
   const c = supa();
   if (!c) { set({ status: 'aus', ready: true }); return; }
 
+  // Falls der Server nicht antwortet, nach kurzer Zeit trotzdem die Anmeldung anzeigen
+  setTimeout(() => { if (!info.ready) set({ ready: true }); }, 6000);
   c.auth.onAuthStateChange((event, s) => {
     session = s;
     set({ email: s?.user.email ?? null, status: s ? info.status === 'abmeldet' ? 'laeuft' : info.status : 'abmeldet', ready: true });
