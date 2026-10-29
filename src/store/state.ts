@@ -78,7 +78,7 @@ export interface ReviewRecord {
 
 export interface ExamDate { id: string; module: string; title: string; date: string /* JJJJ-MM-TT */ }
 
-export interface SrsEntry { box: number; due: number; lapses?: number }
+export interface SrsEntry { box: number; due: number; lapses?: number; /** zuletzt bewertet (für die Synchronisierung) */ seen?: number }
 
 export interface AppState {
   version: number;
@@ -144,7 +144,7 @@ export function sanitize(raw: unknown): { state: AppState; dropped: string[] } {
       else dropped.push('Beschädigter Antwortdatensatz');
     }
   }
-  const srsEntry = (v: any): SrsEntry => ({ box: Math.min(5, Math.max(1, v.box)), due: Number(v.due) || 0, ...(Number(v.lapses) > 0 ? { lapses: Math.floor(Number(v.lapses)) } : {}) });
+  const srsEntry = (v: any): SrsEntry => ({ box: Math.min(5, Math.max(1, v.box)), due: Number(v.due) || 0, ...(Number(v.lapses) > 0 ? { lapses: Math.floor(Number(v.lapses)) } : {}), ...(Number(v.seen) > 0 ? { seen: Number(v.seen) } : {}) });
   if (isObj(raw.srs)) for (const [k, v] of Object.entries(raw.srs)) if (isObj(v) && typeof v.box === 'number') s.srs[k] = srsEntry(v);
   if (Array.isArray(raw.tests)) s.tests = raw.tests.filter((x: any) => isObj(x) && typeof x.t === 'number' && typeof x.score === 'number' && Array.isArray(x.modules)).slice(-100) as TestResult[];
   if (isObj(raw.cards)) for (const [k, v] of Object.entries(raw.cards)) if (isObj(v) && typeof v.box === 'number') s.cards[k] = srsEntry(v);
@@ -202,7 +202,7 @@ export function recordAttempt(s: AppState, a: Attempt): AppState {
 
 /** Karteikarte bewerten: gewusst (1), unsicher (0.5), nicht gewusst (0). */
 export function rateCard(s: AppState, cardId: string, score: number, now: number): AppState {
-  return { ...s, cards: { ...s.cards, [cardId]: updateSrs(s.cards[cardId], score, now) } };
+  return { ...s, cards: { ...s.cards, [cardId]: { ...updateSrs(s.cards[cardId], score, now), seen: now } } };
 }
 
 /** Fällige bzw. neue Karten zuerst: neue (nie gesehen) gelten als fällig. */

@@ -7,6 +7,7 @@ import { setState, useStore, exportData, importData } from '../store/store';
 import { uid, type ImportedDoc, type LearningPath } from '../store/state';
 import { analyzePages, pdfToPages, textToPages } from '../store/importer';
 import { download, StatusBadge } from '../ui/common';
+import { AccountCard } from '../cloud/Account';
 import { ExamDates } from '../ui/semester';
 import { href, go } from '../ui/router';
 import { DeleteButton } from './Exam';
@@ -291,6 +292,7 @@ export function SettingsPage({ onTour }: { onTour?: () => void }) {
   return (
     <div className="stack">
       <h1>Einstellungen</h1>
+      <AccountCard />
       <section className="card">
         <h3>Dein Studium</h3>
         <div className="row" style={{ alignItems: 'flex-end' }}>
@@ -322,7 +324,7 @@ export function SettingsPage({ onTour }: { onTour?: () => void }) {
       </section>
       <section className="card">
         <h3>Daten</h3>
-        <p>Alle Daten (Lernstand, Notizen, Experimente, Importe) werden nur lokal in diesem Browser gespeichert. Es gibt keine Nutzerkonten und keine Übertragung an einen Server. Zum Übertragen auf ein anderes Gerät (z. B. MacBook ↔ iPhone) exportieren und dort importieren.</p>
+        <p>Alle Daten werden zuerst in diesem Browser gespeichert. Mit einem Konto (oben) wird der Lernstand zusätzlich in der Datenbank gesichert und auf deinen Geräten abgeglichen. Ohne Konto kannst du ihn hier exportieren und auf einem anderen Gerät importieren – so ziehst du auch einen alten Stand (z. B. von der früheren Neocities-Seite) um. Ein Import wird beim nächsten Abgleich mit deinem Konto zusammengeführt.</p>
         <div className="row">
           <button onClick={() => download(`neurolab-lernstand-${new Date().toISOString().slice(0, 10)}.json`, exportData())}>Daten exportieren</button>
           <label className="btn">Daten importieren<input type="file" accept="application/json,.json" style={{ display: 'none' }} onChange={async (e) => { const f = e.target.files?.[0]; if (f) setMsg(importData(await f.text()).message); e.target.value = ''; }} /></label>

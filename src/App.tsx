@@ -8,6 +8,7 @@ import { ExperimentsPage, SimPage } from './pages/Experiments';
 import { AnalyticsPage, ExamPage } from './pages/Exam';
 import { ImportPage, PathsPage, ReviewPage, SettingsPage, SourcesPage, FactcheckPage } from './pages/Manage';
 import { Tour } from './ui/Tour';
+import { CloudBadge } from './cloud/Account';
 
 class Boundary extends Component<{ children: ReactNode; resetKey: string }, { err: Error | null }> {
   state = { err: null as Error | null };
@@ -89,6 +90,7 @@ export function App() {
         <button className="menu-btn small" aria-expanded={navOpen} aria-controls="nav" onClick={() => setNavOpen((v) => !v)}>☰ Menü</button>
         <a href="#/" className="brand"><Logo /> NeuroLab</a>
         <span className="spacer" />
+        <CloudBadge />
         <button className="small" onClick={() => setTour(true)} aria-label="Hilfe: Tutorial starten">? Hilfe</button>
       </header>
       <nav id="nav" className={`nav ${navOpen ? 'open' : ''}`} aria-label="Hauptnavigation">

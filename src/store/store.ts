@@ -46,10 +46,35 @@ function persist() {
 export function getState() {
   return state;
 }
+// ---- Anbindung an die Synchronisierung (src/cloud/sync.ts)
+const META_KEY = `${STORAGE_KEY}.sync`;
+let savedAt = (() => { try { return Number(JSON.parse(localStorage.getItem(META_KEY) || '{}').savedAt) || 0; } catch { return 0; } })();
+type ChangeKind = 'edit' | 'reset';
+const changeListeners = new Set<(kind: ChangeKind) => void>();
+function touch(kind: ChangeKind) {
+  savedAt = Date.now();
+  try { localStorage.setItem(META_KEY, JSON.stringify({ savedAt })); } catch { /* ignorieren */ }
+  changeListeners.forEach((l) => l(kind));
+}
+/** Zeitpunkt der letzten Änderung auf diesem Gerät */
+export function getSavedAt() { return savedAt; }
+/** Wird bei jeder lokalen Änderung aufgerufen („reset“ = alles gelöscht). */
+export function onLocalChange(fn: (kind: ChangeKind) => void) { changeListeners.add(fn); return () => { changeListeners.delete(fn); }; }
+/** Ersetzt den Lernstand durch einen synchronisierten Stand, ohne ihn als lokale Änderung zu zählen. */
+export function replaceFromSync(next: AppState, nextSavedAt: number) {
+  state = next;
+  savedAt = Math.max(savedAt, nextSavedAt);
+  try { localStorage.setItem(META_KEY, JSON.stringify({ savedAt })); } catch { /* ignorieren */ }
+  persist();
+  listeners.forEach((l) => l());
+}
+
 export function setState(fn: (s: AppState) => AppState) {
+  const prev = state;
   state = fn(state);
   persist();
   listeners.forEach((l) => l());
+  if (state !== prev) touch('edit');
 }
 export function useStore<T>(sel: (s: AppState) => T): T {
   return useSyncExternalStore(
@@ -82,6 +107,7 @@ export function importData(text: string): { ok: boolean; message: string } {
   state = r.state;
   persist();
   listeners.forEach((l) => l());
+  touch('edit');
   return { ok: true, message: r.dropped.length ? `Importiert. Übersprungen: ${r.dropped.join('; ')}` : 'Lernstand vollständig importiert.' };
 }
 export function deleteAll() {
@@ -92,4 +118,5 @@ export function deleteAll() {
     /* ignorieren */
   }
   listeners.forEach((l) => l());
+  touch('reset');
 }

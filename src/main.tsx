@@ -5,6 +5,9 @@ import '@fontsource/atkinson-hyperlegible/latin-700.css';
 import '@fontsource/atkinson-hyperlegible/latin-400-italic.css';
 import { App } from './App';
 import './ui/styles.css';
+import { startCloud } from './cloud/sync';
+
+startCloud();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

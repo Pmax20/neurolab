@@ -366,6 +366,6 @@ export function AnalyticsPage() {
 export function DeleteButton() {
   const [confirm, setConfirm] = useState(false);
   return confirm ? (
-    <div className="row"><span>Wirklich alle Lerndaten löschen?</span><button className="primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => { deleteAll(); setConfirm(false); }}>Ja, löschen</button><button onClick={() => setConfirm(false)}>Abbrechen</button></div>
+    <div className="row"><span>Wirklich alle Lerndaten löschen? Bist du angemeldet, wird auch der gesicherte Stand in deinem Konto geleert.</span><button className="primary" style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }} onClick={() => { deleteAll(); setConfirm(false); }}>Ja, löschen</button><button onClick={() => setConfirm(false)}>Abbrechen</button></div>
   ) : <button onClick={() => setConfirm(true)}>Alle Lerndaten löschen …</button>;
 }

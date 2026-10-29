@@ -66,3 +66,15 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   fetaler Kreislauf, Handwurzel-Drill und Nervenläsions-Fälle für Arm und Bein.
 - Neue Gewebeschemata: Arterie (muskulär und elastisch), Vene, Kapillare, sieben Blutzellen im Ausstrich, Leisten- und Felderhaut, Schweißdrüse, seröse und muköse Drüse.
 - `src/content/tasks6.ts`: 75 Aufgaben inkl. Beschriftungsaufgaben und 11 Fällen für den Histologie-Prüfungssimulator.
+
+## Konto und Synchronisierung (Stand 29.10.2026)
+
+- Hosting: GitHub Pages (`.github/workflows/deploy.yml` baut und testet bei jedem Push auf `main`).
+- Datenbank: Supabase (Region Frankfurt), Zugangsdaten in `src/config.ts` (nur der öffentliche „publishable key“).
+- Tabelle `progress` (ein Lernstand pro Person, `user_id` = Konto) mit Row Level Security: jede Person liest und schreibt nur ihre eigene Zeile.
+- „Lokal zuerst“: Die App speichert immer sofort im Browser und funktioniert offline. Angemeldet wird im Hintergrund abgeglichen
+  (holen → zusammenführen → speichern), bei Änderungen nach 3 s, beim Zurückkehren in den Tab, bei wiederhergestellter Verbindung und alle 2 min.
+- Zusammenführen (`src/store/merge.ts`, getestet in `merge.test.ts`): Antworten, Prüfungsrunden und Lektionsfortschritt werden vereinigt;
+  der Wiederholungsplan einer Aufgabe kommt vom Gerät mit der jüngsten Antwort, Karteikarten von der zuletzt bewerteten Fassung;
+  Einstellungen, Notizen und Listen vom zuletzt geänderten Gerät. „Alle Daten löschen“ leert angemeldet auch den gesicherten Stand.
+- Anmeldung mit E-Mail und Passwort (PKCE-Ablauf, damit Mail-Links mit dem Hash-Routing funktionieren).
