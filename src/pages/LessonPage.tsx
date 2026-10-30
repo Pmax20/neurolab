@@ -19,6 +19,8 @@ import * as CH5 from './views/chem5Views';
 import * as CH6 from './views/chem6Views';
 import * as K2 from './views/semester2Views';
 import { relevanceOf } from '../content/curriculum';
+import { TopicView } from './views/topicViews';
+import { TOPIC_EXTRAS } from '../content/topics';
 
 const VIEWS: Record<string, (l: Lesson) => ReactNode> = {
   motion: () => <K2.MotionView />, work: () => <K2.WorkView />, pressure: () => <K2.PressureView />, periodic: () => <K2.PeriodicView />, balance: () => <K2.BalanceView />, microscopy: () => <K2.MicroscopyView />,
@@ -92,7 +94,7 @@ export function LessonPage({ id }: { id: string }) {
   const steps = l ? [
     { key: 'ueberblick', label: 'Überblick' },
     { key: 'mechanismus', label: 'Mechanismus' },
-    ...(l.view && VIEWS[l.view] ? [{ key: 'ausprobieren', label: 'Ausprobieren' }] : []),
+    ...((l.view && VIEWS[l.view]) || TOPIC_EXTRAS[l.id] ? [{ key: 'ausprobieren', label: 'Ausprobieren' }] : []),
     { key: 'vertiefung', label: 'Vertiefung' },
     { key: 'ueben', label: 'Üben' },
   ] : [];
@@ -181,7 +183,7 @@ export function LessonPage({ id }: { id: string }) {
             </div>
           )}
           {cur === 'mechanismus' && <ol className="steps">{l.mechanism.map((m) => <li key={m.title}><b>{m.title}.</b> {m.text}</li>)}</ol>}
-          {cur === 'ausprobieren' && l.view && VIEWS[l.view](l)}
+          {cur === 'ausprobieren' && (TOPIC_EXTRAS[l.id] ? <TopicView key={l.id} extra={TOPIC_EXTRAS[l.id]} base={l.view && VIEWS[l.view] ? VIEWS[l.view](l) : undefined} /> : l.view && VIEWS[l.view] ? VIEWS[l.view](l) : null)}
           {cur === 'vertiefung' && (
             <div>
               {l.depth.text.map((t, i) => <p key={i}>{t}</p>)}

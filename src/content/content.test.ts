@@ -359,3 +359,24 @@ describe('Chemie 1. Semester vollständig', () => {
     expect(missing).toEqual([]);
   });
 });
+
+describe("1. Semester vollständig", () => {
+  test('jedes Lernziel jeder Lektion der Fächer des 1. Semesters hat mindestens eine Aufgabe', async () => {
+    const { MODULES, lessonById: byId, TASKS: all } = await import('./index');
+    const missing: string[] = [];
+    for (const m of MODULES.filter((x) => x.semesters.includes(1))) for (const id of m.lessons) { const l = byId(id); if (!l) { missing.push(`fehlt: ${id}`); continue; } for (const o of l.objectives) if (!all.some((t) => t.objective === o && t.lessons.includes(id))) missing.push(`${id}: ${o}`); }
+    expect(missing).toEqual([]);
+  });
+  test('Verweise, Voraussetzungen und Übungsdaten zeigen auf vorhandene Lektionen', async () => {
+    const { LESSONS: all, TASKS: tasks } = await import('./index');
+    const { TOPIC_EXTRAS } = await import('./topics');
+    const ids = new Set(all.map((l) => l.id));
+    const bad: string[] = [];
+    for (const l of all) for (const x of [...l.links, ...l.prerequisites]) if (!ids.has(x)) bad.push(`${l.id} → ${x}`);
+    for (const k of Object.keys(TOPIC_EXTRAS)) if (!ids.has(k)) bad.push(`Übung ${k}`);
+    for (const [k, e] of Object.entries(TOPIC_EXTRAS)) for (const q of e.quiz ?? []) { if (!q.options.includes(q.answer)) bad.push(`${k}: Antwort fehlt in Optionen – ${q.q}`); if (new Set(q.options).size !== q.options.length) bad.push(`${k}: doppelte Option – ${q.q}`); }
+    for (const e of Object.values(TOPIC_EXTRAS)) for (const t of e.tables ?? []) for (const r of t.rows) if (r.length !== t.head.length) bad.push(`Tabelle ${t.title}: Zeilenlänge`);
+    const tid = new Set<string>(); for (const t of tasks) { if (tid.has(t.id)) bad.push(`doppelte Aufgaben-ID ${t.id}`); tid.add(t.id); }
+    expect(bad).toEqual([]);
+  });
+});

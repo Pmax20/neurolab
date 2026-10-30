@@ -16,6 +16,13 @@ import { upgradeAtom, upgradePse, upgradeBindung, upgradeKonz, upgradeRedox, upg
 import { TASKS_9 } from './tasks9';
 import { ORGANIC_LESSONS, upgradeOrganik } from './chem6';
 import { TASKS_10 } from './tasks10';
+import { BIO_UPGRADES, BIO_LESSONS2, BIO_ORDER } from './bio2';
+import { TASKS_11 } from './tasks11';
+import { PHYS_UPGRADES, PHYS_LESSONS3, PHYS_ORDER } from './phys3';
+import { TASKS_12 } from './tasks12';
+import { TERM_UPGRADES, TERM_LESSONS2, TERM_ORDER } from './term2';
+import { HISTO_UPGRADES } from './histo3';
+import { TASKS_13 } from './tasks13';
 import { TASKS_8 } from './tasks8';
 import { TASKS_4 } from './tasks4';
 import { TASKS_5 } from './tasks5';
@@ -28,11 +35,11 @@ const GUIDED_EXPERIMENTS = [...GUIDED_3, ...GUIDED_1];
 // Die Zellmembran-Lektion gehört im Studienplan zur Biologie (1. Semester).
 const RELOCATE: Record<string, Lesson['module']> = { membran: 'cell' };
 // Ausgebaute Fassungen (Chemie nach Seminar 2)
-const UPGRADE: Record<string, (l: Lesson) => Lesson> = { gleichgewicht: upgradeGleichgewicht, 'saeure-base': upgradeSaeureBase, atommodell: upgradeAtom, periodensystem: upgradePse, bindungen: upgradeBindung, konzentrationen: upgradeKonz, redox: upgradeRedox, komplexe: upgradeKomplex, organik: upgradeOrganik };
-export const LESSONS: Lesson[] = [...ANATOMY_LESSONS, ...ANATOMY2_LESSONS, ...NEURO_LESSONS, ...CELL_LESSONS, ...MOLPHYS_LESSONS, ...CHEM_LESSONS, ...PHYS_LESSONS, ...BIO_LESSONS, ...HISTO_LESSONS, ...TERM_LESSONS, ...PHYS2_LESSONS, ...CHEM2_LESSONS, ...HISTO2_LESSONS, ...HYDROCARBON_LESSONS, ...ENERGETICS_LESSONS, ...ORGANIC_LESSONS]
+const UPGRADE: Record<string, (l: Lesson) => Lesson> = { gleichgewicht: upgradeGleichgewicht, 'saeure-base': upgradeSaeureBase, atommodell: upgradeAtom, periodensystem: upgradePse, bindungen: upgradeBindung, konzentrationen: upgradeKonz, redox: upgradeRedox, komplexe: upgradeKomplex, organik: upgradeOrganik, ...BIO_UPGRADES, ...PHYS_UPGRADES, ...TERM_UPGRADES, ...HISTO_UPGRADES };
+export const LESSONS: Lesson[] = [...ANATOMY_LESSONS, ...ANATOMY2_LESSONS, ...NEURO_LESSONS, ...CELL_LESSONS, ...MOLPHYS_LESSONS, ...CHEM_LESSONS, ...PHYS_LESSONS, ...BIO_LESSONS, ...HISTO_LESSONS, ...TERM_LESSONS, ...PHYS2_LESSONS, ...CHEM2_LESSONS, ...HISTO2_LESSONS, ...HYDROCARBON_LESSONS, ...ENERGETICS_LESSONS, ...ORGANIC_LESSONS, ...BIO_LESSONS2, ...PHYS_LESSONS3, ...TERM_LESSONS2]
   .map((l) => (RELOCATE[l.id] ? { ...l, module: RELOCATE[l.id] } : l))
   .map((l) => (UPGRADE[l.id] ? UPGRADE[l.id](l) : l));
-const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...TASKS_7, ...TASKS_8, ...TASKS_9, ...TASKS_10, ...calcTasks(LESSONS)];
+const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...TASKS_7, ...TASKS_8, ...TASKS_9, ...TASKS_10, ...TASKS_11, ...TASKS_12, ...TASKS_13, ...calcTasks(LESSONS)];
 export const STRUCTURES: Structure[] = [...NEURO_STRUCTURES, ...MUSCLE_STRUCTURES, ...CELL_STRUCTURES, ...TISSUE_STRUCTURES, ...ANATOMY_STRUCTURES, ...ANATOMY2_STRUCTURES, ...TISSUE2_STRUCTURES];
 export { TASKS, GUIDED_EXPERIMENTS, MOLECULES, TERM_CARDS };
 
@@ -46,14 +53,14 @@ export const MODULES: LearningModule[] = [
     lessons: ['allgemeine-anatomie', 'embryologie', 'knochen', 'gelenke', 'muskellehre', 'nervensystem', 'herz', 'gefaesssystem', 'rumpfwand', 'obere-extremitaet', 'untere-extremitaet'] },
   { id: 'molecule', title: 'Chemie', area: 'Chemie für Mediziner', semesters: [1, 2], description: 'Allgemeine und anorganische Chemie, organische Chemie und Naturstoffe – alle Themen der Vorlesung Chemie für Mediziner und der Seminare (Praktikum I), mit Rechentrainer und Aufgaben.',
     lessons: ['atommodell', 'periodensystem', 'bindungen', 'stoechiometrie', 'konzentrationen', 'gleichgewicht', 'energetik-kinetik', 'saeure-base', 'redox', 'komplexe', 'kohlenwasserstoffe', 'organik', 'alkohole-amine', 'carbonyle', 'carbonsaeuren', 'stereochemie', 'aromaten-heterocyclen', 'molekuele', 'naturstoffe', 'kohlenhydrate', 'lipide', 'aminosaeuren-proteine', 'nukleotide'] },
-  { id: 'cell', title: 'Biologie', area: 'Biologie für Mediziner', semesters: [1], description: 'Zelle, Membran und Transport, Zellteilung, Vererbung, Genexpression, Mikroorganismen.',
-    lessons: ['zellaufbau', 'membran', 'stofftransport', 'osmose', 'zellzyklus', 'genetik', 'proteinbiosynthese', 'mikroorganismen', 'energiegewinnung', 'enzyme'] },
-  { id: 'physics', title: 'Physik', area: 'Physik und Biophysik', semesters: [1, 2], description: 'Einheiten, Bewegung, Kräfte, Energie, Druck, Strömung, Diffusion, Elektrizität, Optik, Ultraschall und Radioaktivität – immer mit medizinischem Bezug.',
-    lessons: ['groessen-bewegung', 'mechanik', 'energie-leistung', 'druck-dichte', 'stroemung', 'diffusion', 'elektrizitaet', 'optik', 'ultraschall', 'radioaktivitaet'] },
+  { id: 'cell', title: 'Biologie', area: 'Biologie für Mediziner', semesters: [1], description: 'Zelle und Organellen, Zellkern, Membran und Transport, Zytoskelett, Signalübertragung und Apoptose, Zellteilung und Keimzellen, Vererbung, Chromosomenaberrationen, Populationsgenetik, Genexpression und Genregulation, Replikation und Mutation, Gentechnik, Bakterien, Viren, Pilze und Parasiten, Energiestoffwechsel und Enzyme.',
+    lessons: BIO_ORDER },
+  { id: 'physics', title: 'Physik', area: 'Physik und Biophysik', semesters: [1, 2], description: 'Messen und Auswerten, Mechanik, Energie, Druck, Strömung, Gase und Grenzflächen, Diffusion, Wärme, Exponentialfunktionen, Elektrizität und Magnetismus mit MRT, Schwingungen und Hören, Ultraschall, Optik und Photometrie, Radioaktivität, Röntgen und CT – immer mit medizinischem Bezug.',
+    lessons: PHYS_ORDER },
   { id: 'histo', title: 'Histologie', area: 'Mikroskopische Anatomie (Teil A)', semesters: [1], description: 'Mikroskopie und Präparate, die Grundgewebe (Epithel, Binde- und Stützgewebe, Muskel- und Nervengewebe), Blut und Gefäßwand, Haut und Drüsen.',
     lessons: ['mikroskopie', 'epithel', 'bindegewebe', 'muskel-nervengewebe', 'blut-gefaesse', 'haut-druesen'] },
-  { id: 'term', title: 'Terminologie', area: 'Medizinische Terminologie', semesters: [1], description: 'Lagebezeichnungen, Wortbausteine und Grammatik der Fachsprache.',
-    lessons: ['lagebezeichnungen', 'wortbildung'] },
+  { id: 'term', title: 'Terminologie', area: 'Medizinische Terminologie', semesters: [1], description: 'Lagebezeichnungen und Achsen, Wortbausteine, Deklinationen, Adjektive und mehrgliedrige Termini, Termini des Bewegungsapparats und klinische Fachsprache.',
+    lessons: TERM_ORDER },
   { id: 'neuro', title: 'Nerv und Muskel', area: 'Physiologie (ab 3. Semester)', semesters: [3, 4], description: 'Nervenzellen, Membranpotenzial, Aktionspotenzial, Synapsen und neuromuskuläre Übertragung – bis zum Querbrückenzyklus.',
     lessons: NEURO_LESSONS.filter((l) => !RELOCATE[l.id]).map((l) => l.id) },
   { id: 'physio', title: 'Organsysteme', area: 'Physiologie (ab 3. Semester)', semesters: [3, 4], description: 'Muskelphysiologie, Kreislauf und Atmung als dokumentierte, vereinfachte Modelle.',

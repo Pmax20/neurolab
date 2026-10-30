@@ -68,7 +68,7 @@ export interface CalcInstance {
 
 export interface CalcTemplate {
   id: string;
-  subject: 'Chemie' | 'Physik' | 'Histologie';
+  subject: 'Chemie' | 'Physik' | 'Histologie' | 'Biologie';
   lesson: string;
   objective: number;
   level: 1 | 2 | 3;
@@ -672,6 +672,231 @@ export const CALC_TEMPLATES: CalcTemplate[] = [
       result: v2, unit: 'cm/s', units: U({ 'cm/s': 1, 'm/s': 100, 'mm/s': 0.1 }),
       steps: [`Q = A₁ · v₁ = ${fmt(A1, 2)} cm² · ${v1} cm/s = ${fmt(A1 * v1, 3)} cm³/s`, `v₂ = Q / A₂ = ${fmt(A1 * v1, 3)} cm³/s / ${fmt(A2, 2)} cm² = ${fmt(v2, 3)} cm/s`], check: '(cm/s · cm²) / cm² = cm/s',
       interpretation: 'Der Volumenstrom bleibt gleich; an der Engstelle muss das Blut schneller fließen.', pitfalls: ['Verhältnis der Flächen umgedreht – dann würde das Blut an der Engstelle langsamer.'] };
+  } },
+  // ------------------------------------------------------------------ Biologie
+  { id: 'hardy-weinberg', subject: 'Biologie', lesson: 'populationsgenetik', objective: 1, level: 2, title: 'Überträgerhäufigkeit nach Hardy-Weinberg', source: 'buselmaier', make: (r) => {
+    const [name, n] = pick(r, [['Mukoviszidose', 2500], ['Phenylketonurie', 10000], ['Spinale Muskelatrophie', 10000], ['Hämochromatose', 400], ['eine seltene Stoffwechselkrankheit', 40000], ['eine seltene Stoffwechselkrankheit', 90000]] as [string, number][]);
+    const q = Math.sqrt(1 / n); const het = 2 * q * (1 - q); const one = 1 / het;
+    return { context: `${name} wird autosomal-rezessiv vererbt und tritt bei etwa 1 von ${n.toLocaleString('de-DE')} Neugeborenen auf. Jeder Wievielte in der Bevölkerung ist heterozygoter Überträger (1 : x)? Gib x an.`, givens: [`Häufigkeit der Erkrankten q² = 1/${n}`, 'Hardy-Weinberg-Gleichgewicht angenommen'],
+      sought: 'Überträgerhäufigkeit 2pq', soughtOptions: ['Überträgerhäufigkeit 2pq', 'Allelfrequenz q', 'Erkranktenhäufigkeit q²', 'Wiederholungsrisiko'],
+      formula: 'q = √(q²); 2pq = 2 · q · (1 − q)', formulaOptions: ['q = √(q²); 2pq = 2 · q · (1 − q)', '2pq = 2 · q²', '2pq = q² / 2', 'q = q² / 2; 2pq = q'],
+      result: one, unit: '', units: NONE, tolerance: { rel: 0.03 },
+      steps: [`q = √(1/${n}) = 1/${fmt(1 / q, 4)}`, `2pq = 2 · ${fmt(q, 3)} · ${fmt(1 - q, 4)} = ${fmt(het, 3)}`, `1 / ${fmt(het, 3)} ≈ ${fmt(one, 3)} → jeder ${fmt(one, 3)}. ist Überträger`], check: 'Häufigkeiten sind dimensionslos.',
+      interpretation: `Überträger sind viel häufiger als Erkrankte: etwa ${fmt(het * n, 3)}-mal so häufig.`, pitfalls: ['q² direkt verdoppelt statt zuerst die Wurzel zu ziehen.', 'Allelfrequenz q mit Überträgerhäufigkeit verwechselt.'] };
+  } },
+  { id: 'bakterienwachstum', subject: 'Biologie', lesson: 'mikroorganismen', objective: 4, level: 2, title: 'Bakterienzahl nach exponentiellem Wachstum', source: 'buselmaier', make: (r) => {
+    const [name, g] = pick(r, [['E. coli', 20], ['Staphylococcus aureus', 30], ['Streptococcus pyogenes', 30], ['Salmonella', 25]] as [string, number][]);
+    const n = pick(r, [3, 4, 5, 6, 8, 10]); const t = g * n; const N0 = pick(r, [10, 100, 1000]); const N = N0 * 2 ** n;
+    return { context: `${name} hat unter optimalen Bedingungen eine Generationszeit von ${g} min. In einer Probe sind anfangs ${N0} Bakterien. Wie viele sind es nach ${t} min, wenn sie sich ungehindert teilen?`, givens: [`N₀ = ${N0}`, `Generationszeit = ${g} min`, `t = ${t} min`],
+      sought: 'Bakterienzahl N', soughtOptions: ['Bakterienzahl N', 'Generationszeit', 'Zahl der Generationen', 'Wachstumsrate'],
+      formula: 'N = N₀ · 2^(t / Generationszeit)', formulaOptions: ['N = N₀ · 2^(t / Generationszeit)', 'N = N₀ · 2 · t / Generationszeit', 'N = N₀ + 2^(t / Generationszeit)', 'N = N₀ · (t / Generationszeit)²'],
+      result: N, unit: '', units: COUNT, tolerance: { rel: 0.01 },
+      steps: [`Zahl der Generationen: ${t} / ${g} = ${n}`, `N = ${N0} · 2^${n} = ${N0} · ${2 ** n} = ${fmt(N, 4)}`], check: 'Der Exponent ist dimensionslos (min/min).',
+      interpretation: 'In der exponentiellen Phase verdoppelt sich die Zahl in jeder Generation – darum sind Infektionen schnell ernst.', pitfalls: ['Linear gerechnet (N₀ · 2 · Generationen).', 'Generationen falsch gezählt.'] };
+  } },
+  { id: 'pcr-kopien', subject: 'Biologie', lesson: 'gentechnik', objective: 0, level: 1, title: 'Kopienzahl nach PCR-Zyklen', source: 'buselmaier', make: (r) => {
+    const N0 = pick(r, [1, 10, 50, 100, 1000]); const n = pick(r, [10, 15, 20, 25, 30]); const N = N0 * 2 ** n;
+    return { context: `In einer Probe liegen ${N0} Kopien eines DNA-Abschnitts vor. Wie viele Kopien entstehen theoretisch nach ${n} PCR-Zyklen (perfekte Effizienz)?`, givens: [`N₀ = ${N0}`, `n = ${n} Zyklen`],
+      sought: 'Kopienzahl', soughtOptions: ['Kopienzahl', 'Zyklenzahl', 'Ct-Wert', 'Fragmentlänge'],
+      formula: 'N = N₀ · 2ⁿ', formulaOptions: ['N = N₀ · 2ⁿ', 'N = N₀ · 2 · n', 'N = N₀ · n²', 'N = N₀ + 2ⁿ'],
+      result: N, unit: '', units: COUNT, tolerance: { rel: 0.01 },
+      steps: [`2^${n} = ${fmt(2 ** n, 4)}`, `N = ${N0} · ${fmt(2 ** n, 4)} = ${fmt(N, 4)}`], check: 'Kopienzahl ohne Einheit.',
+      interpretation: 'Real liegt die Effizienz unter 100 %, und nach vielen Zyklen flacht die Kurve ab (Plateau).', pitfalls: ['Linear statt exponentiell gerechnet.'] };
+  } },
+  { id: 'osmolaritaet-bio', subject: 'Biologie', lesson: 'osmose', objective: 3, level: 1, title: 'Osmolarität einer Salz- oder Zuckerlösung', source: 'buselmaier', make: (r) => {
+    const [name, i] = pick(r, [['NaCl', 2], ['KCl', 2], ['CaCl₂', 3], ['MgCl₂', 3], ['Glukose', 1], ['Harnstoff', 1], ['Na₂SO₄', 3]] as [string, number][]);
+    const c = pick(r, [50, 75, 100, 120, 150, 154, 200]); const osm = c * i;
+    return { context: `Eine Lösung enthält ${c} mmol/l ${name}. Wie hoch ist ihre ideale Osmolarität (vollständige Dissoziation)?`, givens: [`c = ${c} mmol/l`, `${name} → ${i} Teilchen`],
+      sought: 'Osmolarität', soughtOptions: ['Osmolarität', 'Stoffmengenkonzentration', 'Massenkonzentration', 'osmotischer Druck'],
+      formula: 'Osmolarität = c · i', formulaOptions: ['Osmolarität = c · i', 'Osmolarität = c / i', 'Osmolarität = c + i', 'Osmolarität = c'],
+      result: osm, unit: 'mosmol/l', units: U({ 'mosmol/l': 1, 'mosm/l': 1, 'osmol/l': 1000 }),
+      steps: [`Osmolarität = ${c} · ${i} = ${osm} mosmol/l`], check: 'mmol/l · Teilchenzahl = mosmol/l', interpretation: osm > 300 ? 'Deutlich über Plasma (≈ 290 mosmol/l) – hyperosmolar.' : osm < 270 ? 'Unter Plasma (≈ 290 mosmol/l) – hypoosmolar.' : 'Nahe am Plasma (≈ 290 mosmol/l).',
+      pitfalls: ['Dissoziation vergessen.', 'Isoosmolar mit isoton verwechselt (Harnstoff, Glukose sind membrangängig bzw. werden verstoffwechselt).'] };
+  } },
+  // ------------------------------------------------------------------ Physik (Ausbau 1. Semester)
+  { id: 'rcf', subject: 'Physik', lesson: 'groessen-bewegung', objective: 3, level: 2, title: 'Relative Zentrifugalbeschleunigung', source: 'harten', make: (r) => {
+    const rpm = pick(r, [1000, 1500, 2000, 3000, 4000, 5000]); const rc = pick(r, [8, 10, 12, 15]); const w = 2 * Math.PI * rpm / 60; const rcf = (w * w * rc / 100) / G;
+    return { context: `Eine Blutprobe wird mit ${rpm} Umdrehungen pro Minute zentrifugiert, der Rotorradius beträgt ${rc} cm. Wie groß ist die relative Zentrifugalbeschleunigung (Vielfaches von g)?`, givens: [`n = ${rpm} min⁻¹`, `r = ${rc} cm`, 'g = 9,81 m/s²'],
+      sought: 'RCF (× g)', soughtOptions: ['RCF (× g)', 'Winkelgeschwindigkeit', 'Umfangsgeschwindigkeit', 'Drehzahl'],
+      formula: 'RCF = ω² · r / g mit ω = 2π · n', formulaOptions: ['RCF = ω² · r / g mit ω = 2π · n', 'RCF = ω · r / g', 'RCF = n · r / g', 'RCF = ω² / (r · g)'],
+      result: rcf, unit: '', units: NONE, tolerance: { rel: 0.03 },
+      steps: [`ω = 2π · ${rpm} / 60 s = ${fmt(w, 4)} s⁻¹`, `a = ω² · r = ${fmt(w, 4)}² · ${fmt(rc / 100)} m = ${fmt(w * w * rc / 100, 4)} m/s²`, `RCF = a / g = ${fmt(rcf, 3)}`], check: '(1/s)² · m / (m/s²) = dimensionslos',
+      interpretation: `Die Probe erfährt das ${fmt(rcf, 3)}-Fache der Erdbeschleunigung.`, pitfalls: ['Drehzahl nicht von min⁻¹ in s⁻¹ umgerechnet.', 'Radius in cm statt m eingesetzt.', 'ω nicht quadriert.'] };
+  } },
+  { id: 'hooke-spannung', subject: 'Physik', lesson: 'mechanik', objective: 3, level: 2, title: 'Dehnung einer Sehne nach Hooke', source: 'harten', make: (r) => {
+    const F = pick(r, [500, 1000, 1500, 2000, 3000]); const A = pick(r, [40, 50, 60, 80, 100]); const E = 1.2e9; const l0 = pick(r, [5, 10, 15, 20]);
+    const s = F / (A * 1e-6); const eps = s / E; const dl = eps * l0 * 10;
+    return { context: `Die Achillessehne (Querschnitt ${A} mm², Länge ${l0} cm, E ≈ 1,2 GPa) wird beim Sprung mit ${F} N belastet. Um wie viel Millimeter wird sie im elastischen Bereich länger?`, givens: [`F = ${F} N`, `A = ${A} mm²`, 'E = 1,2 GPa', `l₀ = ${l0} cm`],
+      sought: 'Verlängerung Δl', soughtOptions: ['Verlängerung Δl', 'Spannung σ', 'Elastizitätsmodul', 'Dehnung ε'],
+      formula: 'Δl = l₀ · F / (A · E)', formulaOptions: ['Δl = l₀ · F / (A · E)', 'Δl = l₀ · A · E / F', 'Δl = F · E / (A · l₀)', 'Δl = F / (A · l₀)'],
+      result: dl, unit: 'mm', units: U({ mm: 1, cm: 10, m: 1000, µm: 0.001 }), tolerance: { rel: 0.03 },
+      steps: [`σ = F / A = ${F} N / ${A} · 10⁻⁶ m² = ${fmt(s / 1e6, 3)} MPa`, `ε = σ / E = ${fmt(eps, 3)} (${fmt(eps * 100, 3)} %)`, `Δl = ε · l₀ = ${fmt(eps, 3)} · ${l0 * 10} mm = ${fmt(dl, 3)} mm`], check: 'N / (m² · Pa) = dimensionslos; · mm = mm',
+      interpretation: 'Sehnen dehnen sich nur wenige Prozent – darüber reißen sie.', pitfalls: ['mm² nicht in m² umgerechnet (Faktor 10⁶).', 'GPa nicht in Pa umgerechnet.'] };
+  } },
+  { id: 'grundumsatz', subject: 'Physik', lesson: 'energie-leistung', objective: 3, level: 1, title: 'Tagesumsatz als Leistung', source: 'harten', make: (r) => {
+    const kcal = pick(r, [1500, 1800, 2000, 2200, 2500, 3000]); const P = kcal * 4.184e3 / 86400;
+    return { context: `Ein Mensch setzt pro Tag ${kcal} kcal um. Welcher mittleren Leistung entspricht das?`, givens: [`E = ${kcal} kcal pro Tag`, '1 kcal = 4,184 kJ', '1 d = 86 400 s'],
+      sought: 'Leistung P', soughtOptions: ['Leistung P', 'Energie E', 'Arbeit W', 'Wirkungsgrad'],
+      formula: 'P = E / t', formulaOptions: ['P = E / t', 'P = E · t', 'P = t / E', 'P = E / t²'],
+      result: P, unit: 'W', units: U({ w: 1, kw: 1000, mw: 0.001 }), tolerance: { rel: 0.02 },
+      steps: [`E = ${kcal} · 4,184 kJ = ${fmt(kcal * 4.184, 4)} kJ`, `P = ${fmt(kcal * 4184, 4)} J / 86 400 s = ${fmt(P, 3)} W`], check: 'J / s = W',
+      interpretation: `Der Körper arbeitet im Mittel wie eine ${fmt(P, 2)}-W-Glühbirne – fast alles wird als Wärme abgegeben.`, pitfalls: ['kcal nicht in kJ umgerechnet.', 'Durch Stunden statt Sekunden geteilt.'] };
+  } },
+  { id: 'auftrieb', subject: 'Physik', lesson: 'druck-dichte', objective: 3, level: 1, title: 'Auftriebskraft nach Archimedes', source: 'harten', make: (r) => {
+    const V = pick(r, [0.5, 1, 2, 5, 10, 60, 70]); const [fl, rho] = pick(r, [['Wasser', 1000], ['Meerwasser', 1025], ['Blut', 1060]] as [string, number][]); const F = rho * V / 1000 * G;
+    return { context: `Ein Körper mit ${fmt(V, 3)} l Volumen ist vollständig in ${fl} (ρ = ${rho} kg/m³) eingetaucht. Wie groß ist die Auftriebskraft?`, givens: [`V = ${fmt(V, 3)} l`, `ρ = ${rho} kg/m³`, 'g = 9,81 m/s²'],
+      sought: 'Auftriebskraft F_A', soughtOptions: ['Auftriebskraft F_A', 'Gewichtskraft', 'Dichte', 'Druck'],
+      formula: 'F_A = ρ_Fl · V · g', formulaOptions: ['F_A = ρ_Fl · V · g', 'F_A = ρ_Fl · g / V', 'F_A = m · g', 'F_A = ρ_Fl · V'],
+      result: F, unit: 'N', units: U({ n: 1, kn: 1000, mn: 0.001 }), tolerance: { rel: 0.02 },
+      steps: [`V = ${fmt(V, 3)} l = ${fmt(V / 1000, 3)} m³`, `F_A = ${rho} · ${fmt(V / 1000, 3)} · 9,81 = ${fmt(F, 3)} N`], check: 'kg/m³ · m³ · m/s² = N',
+      interpretation: 'Der Auftrieb entspricht der Gewichtskraft der verdrängten Flüssigkeit.', pitfalls: ['Liter nicht in m³ umgerechnet.', 'g vergessen – Ergebnis in kg statt N.'] };
+  } },
+  { id: 'bernoulli-stenose', subject: 'Physik', lesson: 'stroemung', objective: 4, level: 1, title: 'Druckgradient über einer Klappenstenose', source: 'harten', make: (r) => {
+    const v = pick(r, [2, 2.5, 3, 3.5, 4, 4.5, 5]); const dp = 4 * v * v;
+    return { context: `Im Doppler-Ultraschall misst man über einer verengten Aortenklappe eine maximale Flussgeschwindigkeit von ${fmt(v, 2)} m/s. Wie groß ist der maximale Druckgradient nach der vereinfachten Bernoulli-Gleichung?`, givens: [`v = ${fmt(v, 2)} m/s`],
+      sought: 'Druckgradient Δp', soughtOptions: ['Druckgradient Δp', 'Klappenöffnungsfläche', 'Schlagvolumen', 'Strömungswiderstand'],
+      formula: 'Δp ≈ 4 · v²', formulaOptions: ['Δp ≈ 4 · v²', 'Δp ≈ 4 · v', 'Δp ≈ v² / 4', 'Δp ≈ 2 · v'],
+      result: dp, unit: 'mmHg', units: U({ mmhg: 1 }), tolerance: { rel: 0.02 },
+      steps: [`Δp = 4 · ${fmt(v, 2)}² = ${fmt(dp, 3)} mmHg`], check: 'Faustformel mit v in m/s, Ergebnis in mmHg',
+      interpretation: dp >= 64 ? 'Ein so hoher Gradient spricht für eine hochgradige Stenose.' : dp >= 36 ? 'Ein mittlerer Gradient – mittelgradige Stenose möglich.' : 'Ein eher geringer Gradient.', pitfalls: ['v nicht quadriert.', 'Faktor 4 vergessen.'] };
+  } },
+  { id: 'parallelwiderstand', subject: 'Physik', lesson: 'elektrizitaet', objective: 3, level: 2, title: 'Gesamtwiderstand einer Parallelschaltung', source: 'harten', make: (r) => {
+    const R1 = pick(r, [10, 20, 30, 47, 100, 220]); const R2 = pick(r, [10, 20, 60, 100, 330, 470]); const R = R1 * R2 / (R1 + R2);
+    return { context: `Zwei Widerstände von ${R1} Ω und ${R2} Ω werden parallel geschaltet. Wie groß ist der Gesamtwiderstand?`, givens: [`R₁ = ${R1} Ω`, `R₂ = ${R2} Ω`],
+      sought: 'Gesamtwiderstand R', soughtOptions: ['Gesamtwiderstand R', 'Stromstärke I', 'Spannung U', 'Leistung P'],
+      formula: '1/R = 1/R₁ + 1/R₂', formulaOptions: ['1/R = 1/R₁ + 1/R₂', 'R = R₁ + R₂', 'R = (R₁ + R₂) / 2', 'R = R₁ · R₂'],
+      result: R, unit: 'Ω', units: U({ 'ω': 1, ohm: 1, kω: 1000, kohm: 1000 }), tolerance: { rel: 0.02 },
+      steps: [`1/R = 1/${R1} + 1/${R2} = ${fmt(1 / R1 + 1 / R2, 3)} Ω⁻¹`, `R = ${fmt(R, 3)} Ω`], check: 'Ω',
+      interpretation: 'Der Gesamtwiderstand ist kleiner als der kleinste Einzelwiderstand.', pitfalls: ['Widerstände addiert (Reihenschaltung).', 'Den Kehrwert am Ende vergessen.'] };
+  } },
+  { id: 'mittelwert-sd', subject: 'Physik', lesson: 'messen-auswerten', objective: 1, level: 2, title: 'Standardabweichung einer Messreihe', source: 'harten', make: (r) => {
+    const base = pick(r, [60, 72, 80, 120, 9.8]); const step = base > 50 ? pick(r, [1, 2, 3]) : 0.1; const d = pick(r, [[-2, -1, 0, 1, 2], [-1, -1, 0, 1, 1], [-3, -1, 0, 1, 3], [-2, 0, 0, 0, 2]]);
+    const xs = d.map((k) => Math.round((base + k * step) * 100) / 100); const m = xs.reduce((s, x) => s + x, 0) / xs.length; const sd = Math.sqrt(xs.reduce((s, x) => s + (x - m) ** 2, 0) / (xs.length - 1));
+    return { context: `Eine Messung wird fünfmal wiederholt: ${xs.map((x) => fmt(x, 4)).join('; ')}. Wie groß ist die Standardabweichung s der Einzelwerte (mit n − 1)?`, givens: [`Werte: ${xs.map((x) => fmt(x, 4)).join('; ')}`, 'n = 5'],
+      sought: 'Standardabweichung s', soughtOptions: ['Standardabweichung s', 'Mittelwert', 'Standardfehler', 'Spannweite'],
+      formula: 's = √(Σ(xᵢ − x̄)² / (n − 1))', formulaOptions: ['s = √(Σ(xᵢ − x̄)² / (n − 1))', 's = Σ(xᵢ − x̄) / n', 's = (x_max − x_min) / 2', 's = √(Σxᵢ²) / n'],
+      result: sd, unit: '', units: NONE, tolerance: { rel: 0.03 },
+      steps: [`x̄ = ${fmt(m, 4)}`, `Σ(xᵢ − x̄)² = ${fmt(xs.reduce((s, x) => s + (x - m) ** 2, 0), 3)}`, `s = √(${fmt(xs.reduce((s, x) => s + (x - m) ** 2, 0), 3)} / 4) = ${fmt(sd, 3)}`], check: 's hat die Einheit der Messwerte (hier ohne Angabe).',
+      interpretation: `Der Mittelwert ist auf etwa ± ${fmt(sd / Math.sqrt(5), 2)} (Standardfehler s/√5) bestimmt.`, pitfalls: ['Durch n statt n − 1 geteilt.', 'Die Wurzel vergessen (das wäre die Varianz).'] };
+  } },
+  { id: 'fehler-potenz', subject: 'Physik', lesson: 'messen-auswerten', objective: 2, level: 1, title: 'Relative Unsicherheit einer Potenz', source: 'harten', make: (r) => {
+    const [what, n] = pick(r, [['die Kreisfläche (∝ r²)', 2], ['das Kugelvolumen (∝ r³)', 3], ['den Volumenstrom nach Hagen-Poiseuille (∝ r⁴)', 4]] as [string, number][]); const u = pick(r, [1, 2, 3, 5, 10]); const res = n * u;
+    return { context: `Ein Radius ist auf ± ${u} % genau gemessen. Mit welcher relativen Unsicherheit kennt man ${what}?`, givens: [`relative Unsicherheit von r = ${u} %`, `Exponent n = ${n}`],
+      sought: 'relative Unsicherheit des Ergebnisses', soughtOptions: ['relative Unsicherheit des Ergebnisses', 'absolute Unsicherheit von r', 'Standardabweichung', 'Mittelwert'],
+      formula: 'u_rel(rⁿ) = n · u_rel(r)', formulaOptions: ['u_rel(rⁿ) = n · u_rel(r)', 'u_rel(rⁿ) = u_rel(r)ⁿ', 'u_rel(rⁿ) = u_rel(r) / n', 'u_rel(rⁿ) = u_rel(r)'],
+      result: res, unit: '%', units: U({ '%': 1, prozent: 1 }), tolerance: { rel: 0.01 },
+      steps: [`u_rel = ${n} · ${u} % = ${res} %`], check: 'Prozent bleibt Prozent.',
+      interpretation: 'Hohe Exponenten machen ein Ergebnis empfindlich für kleine Messfehler.', pitfalls: ['Die Unsicherheit potenziert statt mit dem Exponenten multipliziert.'] };
+  } },
+  { id: 'exp-zeit', subject: 'Physik', lesson: 'exponentialfunktionen', objective: 1, level: 3, title: 'Zeit bis zum Abfall auf einen Bruchteil', source: 'harten', make: (r) => {
+    const th = pick(r, [2, 4, 6, 8, 12]); const frac = pick(r, [50, 25, 20, 10, 5, 1]); const t = th * Math.log2(100 / frac);
+    return { context: `Ein Wirkstoff wird mit einer Halbwertszeit von ${th} h abgebaut. Nach welcher Zeit ist die Plasmakonzentration auf ${frac} % des Anfangswerts gefallen?`, givens: [`t½ = ${th} h`, `c/c₀ = ${frac} %`],
+      sought: 'Zeit t', soughtOptions: ['Zeit t', 'Halbwertszeit', 'Zeitkonstante', 'Restkonzentration'],
+      formula: 't = t½ · ln(c₀/c) / ln 2', formulaOptions: ['t = t½ · ln(c₀/c) / ln 2', 't = t½ · (c₀/c)', 't = t½ · ln 2 / ln(c₀/c)', 't = t½ / (c₀/c)'],
+      result: t, unit: 'h', units: U({ h: 1, min: 1 / 60, d: 24 }), tolerance: { rel: 0.02 },
+      steps: [`c₀/c = ${fmt(100 / frac, 3)}`, `t = ${th} h · ln(${fmt(100 / frac, 3)}) / ln 2 = ${th} h · ${fmt(Math.log2(100 / frac), 3)} = ${fmt(t, 3)} h`], check: 'h · dimensionslos = h',
+      interpretation: `Das sind ${fmt(Math.log2(100 / frac), 3)} Halbwertszeiten.`, pitfalls: ['Linear gerechnet.', 'ln und lg vermischt.'] };
+  } },
+  { id: 'waerme-q', subject: 'Physik', lesson: 'waermelehre', objective: 1, level: 1, title: 'Wärmemenge zur Erwärmung', source: 'harten', make: (r) => {
+    const [what, m, c] = pick(r, [['Wasser', 1, 4.19], ['Wasser', 0.5, 4.19], ['Infusionslösung', 1, 4.1], ['Körper eines Erwachsenen', 70, 3.5], ['Körper eines Kindes', 20, 3.5]] as [string, number, number][]);
+    const dT = pick(r, [1, 2, 5, 10, 20]); const Q = m * c * dT;
+    return { context: `Wie viel Wärme ist nötig, um ${fmt(m, 3)} kg ${what} (c ≈ ${fmt(c, 3)} kJ/(kg·K)) um ${dT} K zu erwärmen?`, givens: [`m = ${fmt(m, 3)} kg`, `c = ${fmt(c, 3)} kJ/(kg·K)`, `ΔT = ${dT} K`],
+      sought: 'Wärme Q', soughtOptions: ['Wärme Q', 'Temperatur', 'Wärmekapazität', 'Leistung'],
+      formula: 'Q = m · c · ΔT', formulaOptions: ['Q = m · c · ΔT', 'Q = m · ΔT / c', 'Q = c · ΔT', 'Q = m · c / ΔT'],
+      result: Q, unit: 'kJ', units: U({ kj: 1, j: 0.001, mj: 1000, kcal: 4.184 }), tolerance: { rel: 0.02 },
+      steps: [`Q = ${fmt(m, 3)} · ${fmt(c, 3)} · ${dT} = ${fmt(Q, 4)} kJ`], check: 'kg · kJ/(kg·K) · K = kJ',
+      interpretation: 'Wasser und Körpergewebe speichern viel Wärme – die Körpertemperatur ändert sich nur langsam.', pitfalls: ['Masse vergessen.', 'ΔT in °C und K verwechselt (bei Differenzen gleich).'] };
+  } },
+  { id: 'schweiss', subject: 'Physik', lesson: 'waermelehre', objective: 1, level: 2, title: 'Wärmeabgabe durch Verdunstung', source: 'harten', make: (r) => {
+    const V = pick(r, [0.2, 0.5, 1, 1.5, 2]); const Q = V * 2.4;
+    return { context: `Bei einem Lauf verdunsten ${fmt(V, 2)} l Schweiß von der Haut. Wie viel Wärme gibt der Körper dadurch ab (Verdampfungswärme ≈ 2,4 MJ/kg)?`, givens: [`m ≈ ${fmt(V, 2)} kg`, 'L = 2,4 MJ/kg'],
+      sought: 'abgegebene Wärme Q', soughtOptions: ['abgegebene Wärme Q', 'Temperaturänderung', 'Schweißmenge', 'Leistung'],
+      formula: 'Q = m · L', formulaOptions: ['Q = m · L', 'Q = m · c · ΔT', 'Q = L / m', 'Q = m / L'],
+      result: Q, unit: 'MJ', units: U({ mj: 1, kj: 0.001, j: 1e-6 }), tolerance: { rel: 0.02 },
+      steps: [`Q = ${fmt(V, 2)} kg · 2,4 MJ/kg = ${fmt(Q, 3)} MJ`], check: 'kg · MJ/kg = MJ',
+      interpretation: 'Nur verdunsteter Schweiß kühlt – abtropfender nicht.', pitfalls: ['Spezifische Wärmekapazität statt Verdampfungswärme verwendet.'] };
+  } },
+  { id: 'partialdruck', subject: 'Physik', lesson: 'gase-grenzflaechen', objective: 1, level: 2, title: 'Inspiratorischer O₂-Partialdruck', source: 'harten', make: (r) => {
+    const [ort, p] = pick(r, [['auf Meereshöhe', 760], ['in Leipzig (≈ 113 m)', 750], ['auf der Zugspitze (≈ 2960 m)', 530], ['in La Paz (≈ 3600 m)', 490], ['auf dem Mount Everest', 253]] as [string, number][]); const x = pick(r, [0.209, 0.209, 0.4, 1.0]);
+    const pO2 = x * (p - 47);
+    return { context: `Ein Patient atmet ${x === 0.209 ? 'Raumluft (20,9 % O₂)' : `ein Gasgemisch mit ${fmt(x * 100, 3)} % O₂`} ${ort} (Luftdruck ≈ ${p} mmHg). Wie hoch ist der O₂-Partialdruck der eingeatmeten, mit Wasserdampf gesättigten Luft in den Atemwegen?`, givens: [`p = ${p} mmHg`, `x(O₂) = ${fmt(x, 3)}`, 'p(H₂O) = 47 mmHg bei 37 °C'],
+      sought: 'O₂-Partialdruck', soughtOptions: ['O₂-Partialdruck', 'Luftdruck', 'O₂-Anteil', 'alveolärer CO₂-Partialdruck'],
+      formula: 'p_O₂ = x_O₂ · (p − p_H₂O)', formulaOptions: ['p_O₂ = x_O₂ · (p − p_H₂O)', 'p_O₂ = x_O₂ · p', 'p_O₂ = p − p_H₂O', 'p_O₂ = x_O₂ / (p − p_H₂O)'],
+      result: pO2, unit: 'mmHg', units: U({ mmhg: 1, kpa: 7.50062 }), tolerance: { rel: 0.02 },
+      steps: [`p − p_H₂O = ${p} − 47 = ${p - 47} mmHg`, `p_O₂ = ${fmt(x, 3)} · ${p - 47} = ${fmt(pO2, 3)} mmHg`], check: 'Anteil · mmHg = mmHg',
+      interpretation: 'In der Höhe sinkt der Partialdruck, weil der Gesamtdruck sinkt; zusätzlicher Sauerstoff erhöht den Anteil.', pitfalls: ['Den Wasserdampfdruck nicht abgezogen.', 'Prozent nicht als Anteil (0,209) eingesetzt.'] };
+  } },
+  { id: 'boyle', subject: 'Physik', lesson: 'gase-grenzflaechen', objective: 0, level: 1, title: 'Gasvolumen nach Boyle-Mariotte', source: 'harten', make: (r) => {
+    const tiefe = pick(r, [10, 20, 30]); const p1 = 1 + tiefe / 10; const V1 = pick(r, [1, 2, 4, 6]); const V2 = V1 * p1 / 1;
+    return { context: `Ein Taucher atmet in ${tiefe} m Tiefe (Gesamtdruck ≈ ${fmt(p1, 2)} bar) ${V1} l Luft ein und steigt mit angehaltenem Atem zur Oberfläche (1 bar) auf. Welches Volumen würde diese Luft bei gleicher Temperatur einnehmen?`, givens: [`p₁ = ${fmt(p1, 2)} bar`, `V₁ = ${V1} l`, 'p₂ = 1 bar'],
+      sought: 'Volumen V₂', soughtOptions: ['Volumen V₂', 'Druck p₂', 'Stoffmenge', 'Temperatur'],
+      formula: 'V₂ = p₁ · V₁ / p₂', formulaOptions: ['V₂ = p₁ · V₁ / p₂', 'V₂ = p₂ · V₁ / p₁', 'V₂ = V₁ · p₁ · p₂', 'V₂ = V₁'],
+      result: V2, unit: 'l', units: U({ l: 1, ml: 0.001, dl: 0.1 }), tolerance: { rel: 0.02 },
+      steps: [`p₁V₁ = p₂V₂ → V₂ = ${fmt(p1, 2)} · ${V1} / 1 = ${fmt(V2, 3)} l`], check: 'bar · l / bar = l',
+      interpretation: 'Deshalb muss man beim Aufstieg ausatmen – sonst droht ein Lungenriss.', pitfalls: ['Druckverhältnis umgedreht.'] };
+  } },
+  { id: 'laplace', subject: 'Physik', lesson: 'gase-grenzflaechen', objective: 3, level: 2, title: 'Überdruck in einer Alveole nach Laplace', source: 'harten', make: (r) => {
+    const rr = pick(r, [50, 75, 100, 150]); const [lab, s] = pick(r, [['ohne Surfactant', 0.07], ['mit Surfactant', 0.025], ['mit viel Surfactant', 0.01]] as [string, number][]); const dp = 2 * s / (rr * 1e-6);
+    return { context: `Eine Alveole hat einen Radius von ${rr} µm. Die Oberflächenspannung des Flüssigkeitsfilms beträgt ${lab} etwa ${fmt(s, 2)} N/m. Wie groß ist der Überdruck in der Alveole?`, givens: [`r = ${rr} µm`, `σ = ${fmt(s, 2)} N/m`],
+      sought: 'Überdruck Δp', soughtOptions: ['Überdruck Δp', 'Oberflächenspannung', 'Radius', 'Volumen'],
+      formula: 'Δp = 2σ / r', formulaOptions: ['Δp = 2σ / r', 'Δp = 2σ · r', 'Δp = σ / (2r)', 'Δp = r / (2σ)'],
+      result: dp / 1000, unit: 'kPa', units: U({ kpa: 1, pa: 0.001, mmhg: 0.133322, cmh2o: 0.0980665 }), tolerance: { rel: 0.02 },
+      steps: [`r = ${rr} · 10⁻⁶ m`, `Δp = 2 · ${fmt(s, 2)} / ${fmt(rr * 1e-6)} = ${fmt(dp, 3)} Pa = ${fmt(dp / 1000, 3)} kPa`], check: '(N/m) / m = N/m² = Pa',
+      interpretation: 'Je kleiner die Alveole und je höher σ, desto größer der Druck, der sie kollabieren lässt.', pitfalls: ['µm nicht in m umgerechnet.', 'Faktor 2 vergessen.'] };
+  } },
+  { id: 'schallpegel', subject: 'Physik', lesson: 'schwingungen-akustik', objective: 2, level: 2, title: 'Schallpegel aus der Intensität', source: 'harten', make: (r) => {
+    const e = pick(r, [-10, -9, -8, -7, -6, -5, -4, -3, -2]); const m = pick(r, [1, 2, 5]); const I = m * 10 ** e; const L = 10 * Math.log10(I / 1e-12);
+    return { context: `Eine Schallquelle erzeugt am Ohr eine Intensität von ${fmt(I)} W/m². Wie groß ist der Schallpegel?`, givens: [`I = ${fmt(I)} W/m²`, 'I₀ = 10⁻¹² W/m²'],
+      sought: 'Schallpegel L', soughtOptions: ['Schallpegel L', 'Intensität', 'Frequenz', 'Schalldruck'],
+      formula: 'L = 10 · lg(I / I₀) dB', formulaOptions: ['L = 10 · lg(I / I₀) dB', 'L = lg(I / I₀) dB', 'L = 10 · I / I₀ dB', 'L = 20 · ln(I / I₀) dB'],
+      result: L, unit: 'dB', units: U({ db: 1 }), tolerance: { abs: 0.3 },
+      steps: [`I / I₀ = ${fmt(I / 1e-12)}`, `L = 10 · lg(${fmt(I / 1e-12)}) = ${fmt(L, 3)} dB`], check: 'dB ist ein logarithmisches, dimensionsloses Maß',
+      interpretation: L >= 85 ? 'Dauerhaft so laut drohen Hörschäden.' : 'Unterhalb der Grenze für Lärmschäden.', pitfalls: ['Faktor 10 vergessen.', 'ln statt lg verwendet.'] };
+  } },
+  { id: 'larmor', subject: 'Physik', lesson: 'magnetismus-mrt', objective: 2, level: 1, title: 'Larmor-Frequenz von Protonen', source: 'harten', make: (r) => {
+    const B = pick(r, [0.5, 1, 1.5, 3, 7]); const f = 42.58 * B;
+    return { context: `Ein MRT-Gerät hat eine Feldstärke von ${fmt(B, 2)} T. Mit welcher Frequenz muss der Hochfrequenzpuls für Wasserstoffkerne eingestrahlt werden (γ/2π = 42,58 MHz/T)?`, givens: [`B₀ = ${fmt(B, 2)} T`, 'γ/2π = 42,58 MHz/T'],
+      sought: 'Larmor-Frequenz', soughtOptions: ['Larmor-Frequenz', 'Relaxationszeit', 'Feldstärke', 'Wellenlänge'],
+      formula: 'f = γ/2π · B₀', formulaOptions: ['f = γ/2π · B₀', 'f = B₀ / (γ/2π)', 'f = γ/2π + B₀', 'f = γ/2π · B₀²'],
+      result: f, unit: 'MHz', units: U({ mhz: 1, khz: 0.001, hz: 1e-6, ghz: 1000 }), tolerance: { rel: 0.01 },
+      steps: [`f = 42,58 MHz/T · ${fmt(B, 2)} T = ${fmt(f, 4)} MHz`], check: 'MHz/T · T = MHz',
+      interpretation: 'Das liegt im Bereich der Radiowellen – keine ionisierende Strahlung.', pitfalls: ['Durch B geteilt statt multipliziert.'] };
+  } },
+  { id: 'trafo', subject: 'Physik', lesson: 'magnetismus-mrt', objective: 1, level: 1, title: 'Spannung am Transformator', source: 'harten', make: (r) => {
+    const N1 = pick(r, [200, 500, 1000, 2000]); const N2 = pick(r, [10, 50, 100, 4000, 10000]); const U1 = 230; const U2 = U1 * N2 / N1;
+    return { context: `Ein Transformator hat ${N1} Windungen auf der Primär- und ${N2} auf der Sekundärseite. Primär liegen 230 V Wechselspannung an. Welche Spannung liegt sekundär an?`, givens: [`N₁ = ${N1}`, `N₂ = ${N2}`, 'U₁ = 230 V'],
+      sought: 'Sekundärspannung U₂', soughtOptions: ['Sekundärspannung U₂', 'Stromstärke', 'Windungszahl', 'Leistung'],
+      formula: 'U₂ = U₁ · N₂ / N₁', formulaOptions: ['U₂ = U₁ · N₂ / N₁', 'U₂ = U₁ · N₁ / N₂', 'U₂ = U₁ + N₂ − N₁', 'U₂ = U₁'],
+      result: U2, unit: 'V', units: U({ v: 1, kv: 1000, mv: 0.001 }), tolerance: { rel: 0.01 },
+      steps: [`U₂ = 230 V · ${N2} / ${N1} = ${fmt(U2, 4)} V`], check: 'V · (Windungen/Windungen) = V',
+      interpretation: N2 > N1 ? 'Hochtransformiert – z. B. für die Röntgenröhre.' : 'Heruntertransformiert – z. B. für ein Netzteil.', pitfalls: ['Windungsverhältnis umgedreht.'] };
+  } },
+  { id: 'halbwertsdicke', subject: 'Physik', lesson: 'roentgen-ct', objective: 1, level: 2, title: 'Schwächung durch eine Abschirmung', source: 'harten', make: (r) => {
+    const [mat, d12] = pick(r, [['Blei', 0.25], ['Blei', 0.1], ['Weichgewebe', 30], ['Knochen', 15], ['Aluminium', 2]] as [string, number][]); const n = pick(r, [1, 2, 3, 4, 5]); const d = d12 * n; const rest = 100 * 0.5 ** n;
+    return { context: `Die Halbwertsdicke von ${mat} beträgt für eine bestimmte Röntgenstrahlung ${fmt(d12, 3)} mm. Wie viel Prozent der Intensität gehen durch eine ${fmt(d, 3)} mm dicke Schicht?`, givens: [`d½ = ${fmt(d12, 3)} mm`, `d = ${fmt(d, 3)} mm`],
+      sought: 'durchgelassene Intensität', soughtOptions: ['durchgelassene Intensität', 'Halbwertsdicke', 'Schwächungskoeffizient', 'Dosis'],
+      formula: 'I / I₀ = (½)^(d / d½)', formulaOptions: ['I / I₀ = (½)^(d / d½)', 'I / I₀ = d½ / d', 'I / I₀ = 1 − d / d½', 'I / I₀ = ½ · d / d½'],
+      result: rest, unit: '%', units: U({ '%': 1, prozent: 1 }), tolerance: { rel: 0.02 },
+      steps: [`d / d½ = ${fmt(d, 3)} / ${fmt(d12, 3)} = ${n}`, `I / I₀ = (½)^${n} = ${fmt(rest, 3)} %`], check: 'mm / mm dimensionslos; Anteil in %',
+      interpretation: `${n} Halbwertsdicken lassen ${fmt(rest, 3)} % durch.`, pitfalls: ['Linear statt exponentiell gerechnet.'] };
+  } },
+  { id: 'lambert-beer', subject: 'Physik', lesson: 'licht-photometrie', objective: 1, level: 2, title: 'Konzentration aus der Extinktion', source: 'harten', make: (r) => {
+    const eps = pick(r, [6220, 11000, 15000]); const d = 1; const E = pick(r, [0.12, 0.25, 0.4, 0.55, 0.8, 1.1]); const c = E / (eps * d) * 1e6;
+    return { context: `Eine Probe in einer Küvette mit 1 cm Schichtdicke hat bei der Messwellenlänge die Extinktion ${fmt(E, 2)}. Der molare Extinktionskoeffizient beträgt ${eps} l/(mol·cm). Wie groß ist die Konzentration?`, givens: [`E = ${fmt(E, 2)}`, `ε = ${eps} l/(mol·cm)`, 'd = 1 cm'],
+      sought: 'Konzentration c', soughtOptions: ['Konzentration c', 'Transmission', 'Extinktionskoeffizient', 'Schichtdicke'],
+      formula: 'c = E / (ε · d)', formulaOptions: ['c = E / (ε · d)', 'c = E · ε · d', 'c = ε / (E · d)', 'c = 10^E / (ε · d)'],
+      result: c, unit: 'µmol/l', units: U({ 'µmol/l': 1, 'umol/l': 1, 'mmol/l': 1000, 'mol/l': 1e6, 'nmol/l': 0.001 }), tolerance: { rel: 0.02 },
+      steps: [`c = ${fmt(E, 2)} / (${eps} · 1) mol/l = ${fmt(c / 1e6)} mol/l = ${fmt(c, 3)} µmol/l`], check: '1 / (l/(mol·cm) · cm) = mol/l',
+      interpretation: 'Im linearen Bereich (etwa E < 1–1,5) ist die Extinktion streng proportional zur Konzentration.', pitfalls: ['Mit der Transmission statt der Extinktion gerechnet.', 'mol/l und µmol/l verwechselt.'] };
+  } },
+  { id: 'photonenenergie', subject: 'Physik', lesson: 'licht-photometrie', objective: 0, level: 1, title: 'Photonenenergie aus der Wellenlänge', source: 'harten', make: (r) => {
+    const [name, l] = pick(r, [['UV-B', 310], ['UV-A', 365], ['blaues Licht', 450], ['grünes Licht', 530], ['rotes Licht (Pulsoxymeter)', 660], ['Infrarot (Pulsoxymeter)', 940]] as [string, number][]); const E = 1239.84 / l;
+    return { context: `Welche Energie hat ein Photon von ${name} mit ${l} nm Wellenlänge?`, givens: [`λ = ${l} nm`, 'h · c ≈ 1240 eV · nm'],
+      sought: 'Photonenenergie E', soughtOptions: ['Photonenenergie E', 'Frequenz', 'Wellenlänge', 'Intensität'],
+      formula: 'E = h · c / λ', formulaOptions: ['E = h · c / λ', 'E = h · λ / c', 'E = h · c · λ', 'E = c / (h · λ)'],
+      result: E, unit: 'eV', units: U({ ev: 1, kev: 1000, j: 1 / 1.602e-19 }), tolerance: { rel: 0.02 },
+      steps: [`E = 1240 eV·nm / ${l} nm = ${fmt(E, 3)} eV`], check: 'eV · nm / nm = eV',
+      interpretation: E > 3.3 ? 'Genug Energie, um chemische Bindungen in der DNA zu schädigen.' : 'Zu wenig Energie, um Bindungen zu spalten – nicht ionisierend.', pitfalls: ['Mit der Wellenlänge multipliziert statt geteilt.'] };
   } },
   // ------------------------------------------------------------------ Histologie (Mikroskop)
   { id: 'vergroesserung', subject: 'Histologie', lesson: 'mikroskopie', objective: 0, level: 1, title: 'Gesamtvergrößerung des Mikroskops', source: 'luellmann', make: (r) => {

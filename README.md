@@ -104,3 +104,22 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   Stereochemie, Aromaten/Heterocyclen, Kohlenhydrate, Lipide, Aminosäuren/Proteine, Nukleotide. Gemeinsame Ansicht `organic`
   (`chem6Views.tsx`) mit Quiz und Tabellen je Lektion, pI-Rechner; 58 Aufgaben in `tasks10.ts`, Rechenvorlage `pi-aminosaeure`.
 - Test: Jedes Lernziel jeder Chemie-Lektion hat mindestens eine Aufgabe.
+
+## 1. Semester vollständig: alle Fächer (Stand 30.10.2026)
+
+- Gemeinsame Bausteine in `src/content/kit.ts` (Lektionen, Ausbau mit wörtlich erhaltenen Lernzielen, Aufgabenhelfer, Übungsdaten).
+  Neue Ansicht `topic` (`src/pages/views/topicViews.tsx`): Quiz und Übersichtstabellen; vorhandene interaktive Ansichten bleiben
+  als erster Reiter erhalten. Übungsdaten aller Fächer in `src/content/topics.ts`.
+- Biologie (`bio2.ts`, Aufgaben `tasks11.ts`): alle zehn Lektionen ausgebaut; neu: Zellkern und Chromatin, Zytoskelett,
+  Signalübertragung/Apoptose/Krebs, Chromosomenaberrationen, Populationsgenetik, Replikation/Mutation/Reparatur, Genregulation
+  und Epigenetik, Gentechnik, Viren, Pilze/Parasiten/Prionen.
+- Physik (`phys3.ts`, `tasks12.ts`): alle zehn Lektionen ausgebaut; neu: Messen und Auswerten, Exponentialfunktionen,
+  Wärmelehre, Gase und Grenzflächen, Schwingungen und Hören, Magnetismus und MRT, Röntgen und CT, Licht und Photometrie.
+- Terminologie (`term2.ts`, `tasks13.ts`): Deklinationen, Adjektive und mehrgliedrige Termini, Termini des Bewegungsapparats,
+  klinische Fachsprache; Lagebezeichnungen und Wortbildung ausgebaut.
+- Histologie (`histo3.ts`): alle sechs Lektionen ausgebaut (Spezialfärbungen, EM, Basalmembran, Metaplasie, Kollagen,
+  Knochenumbau, Sarkomer, Myelin, Hämatopoese, Lymphgefäße, Epidermiszellen, Hautanhangsgebilde); Anatomie: zusätzliche
+  Aufgaben und Quiz zu allen elf Lektionen.
+- 24 neue Rechenvorlagen (Biologie und Physik) in `calc.ts`.
+- Test: Jedes Lernziel jeder Lektion aller Fächer des 1. Semesters hat mindestens eine Aufgabe; Verweise und Übungsdaten
+  werden auf Konsistenz geprüft.
