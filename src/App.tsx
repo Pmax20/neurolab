@@ -63,7 +63,9 @@ export function App() {
   useEffect(() => { if (!tourDone && !navigator.webdriver) setTour(true); }, []); // eslint-disable-line
   const cloud = useCloud();
   // Zugang nur mit Konto (solange die Datenbank eingerichtet ist)
-  if (cloud.status !== 'aus') {
+  // Nur in der lokalen Entwicklungsumgebung abschaltbar (für Bildschirmtests), nie in der veröffentlichten Seite
+  const gateOff = import.meta.env.DEV && new URLSearchParams(window.location.search).has('ohne-login');
+  if (cloud.status !== 'aus' && !gateOff) {
     if (!cloud.ready) return <LoginGate loading />;
     if (!cloud.email || cloud.recovery) return <LoginGate />;
   }

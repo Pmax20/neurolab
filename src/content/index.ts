@@ -9,6 +9,8 @@ import { CHEM_LESSONS, PHYS_LESSONS } from './semester1';
 import { ANATOMY_LESSONS, ANATOMY_STRUCTURES } from './anatomy1';
 import { ANATOMY2_LESSONS, ANATOMY2_STRUCTURES, TISSUE2_STRUCTURES } from './anatomy2';
 import { TASKS_6 } from './tasks6';
+import { TASKS_7 } from './tasks7';
+import { upgradeGleichgewicht, upgradeSaeureBase } from './chem3';
 import { TASKS_4 } from './tasks4';
 import { TASKS_5 } from './tasks5';
 import { PHYS2_LESSONS, CHEM2_LESSONS, HISTO2_LESSONS } from './semester1b';
@@ -19,9 +21,12 @@ const GUIDED_EXPERIMENTS = [...GUIDED_3, ...GUIDED_1];
 
 // Die Zellmembran-Lektion gehört im Studienplan zur Biologie (1. Semester).
 const RELOCATE: Record<string, Lesson['module']> = { membran: 'cell' };
+// Ausgebaute Fassungen (Chemie nach Seminar 2)
+const UPGRADE: Record<string, (l: Lesson) => Lesson> = { gleichgewicht: upgradeGleichgewicht, 'saeure-base': upgradeSaeureBase };
 export const LESSONS: Lesson[] = [...ANATOMY_LESSONS, ...ANATOMY2_LESSONS, ...NEURO_LESSONS, ...CELL_LESSONS, ...MOLPHYS_LESSONS, ...CHEM_LESSONS, ...PHYS_LESSONS, ...BIO_LESSONS, ...HISTO_LESSONS, ...TERM_LESSONS, ...PHYS2_LESSONS, ...CHEM2_LESSONS, ...HISTO2_LESSONS]
-  .map((l) => (RELOCATE[l.id] ? { ...l, module: RELOCATE[l.id] } : l));
-const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...calcTasks(LESSONS)];
+  .map((l) => (RELOCATE[l.id] ? { ...l, module: RELOCATE[l.id] } : l))
+  .map((l) => (UPGRADE[l.id] ? UPGRADE[l.id](l) : l));
+const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...TASKS_7, ...calcTasks(LESSONS)];
 export const STRUCTURES: Structure[] = [...NEURO_STRUCTURES, ...MUSCLE_STRUCTURES, ...CELL_STRUCTURES, ...TISSUE_STRUCTURES, ...ANATOMY_STRUCTURES, ...ANATOMY2_STRUCTURES, ...TISSUE2_STRUCTURES];
 export { TASKS, GUIDED_EXPERIMENTS, MOLECULES, TERM_CARDS };
 

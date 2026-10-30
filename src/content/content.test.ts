@@ -308,3 +308,26 @@ test('Zahlen in Zehnerpotenz-Schreibweise werden erkannt (Teilchenzahlen)', () =
   const e = calcInstance('ionenkonz', 4);
   expect(e.formulaOptions).toContain(e.formula);
 });
+
+import { solveAB, titrationPH } from '../pages/views/chem3Views';
+import { lessonById as lessonById2 } from './index';
+describe('Chemie nach Seminar 2: Gleichgewicht und Titration', () => {
+  test('MWG-Tabelle: Esterbildung K = 4 setzt bei 1 : 1 zwei Drittel um', () => {
+    expect(solveAB(4, 1, 1)).toBeCloseTo(2 / 3, 4);
+    const x = solveAB(4, 1, 3);
+    expect((x * x) / ((1 - x) * (3 - x))).toBeCloseTo(4, 4);
+  });
+  test('Titrationskurve: Äquivalenzpunkt starke Säure pH 7, Halbäquivalenzpunkt Essigsäure pH ≈ pKs, Äquivalenzpunkt Essigsäure basisch', () => {
+    expect(titrationPH(null, 0.1, 20, 0.1, 20)).toBeCloseTo(7, 1);
+    expect(titrationPH(4.76, 0.1, 20, 0.1, 10)).toBeCloseTo(4.76, 1);
+    expect(titrationPH(4.76, 0.1, 20, 0.1, 20)).toBeGreaterThan(8);
+    expect(titrationPH(null, 0.1, 20, 0.1, 0)).toBeCloseTo(1, 1);
+  });
+  test('ausgebaute Lektionen behalten alte Lernziele und haben für jedes Lernziel eine Aufgabe', () => {
+    for (const id of ['gleichgewicht', 'saeure-base']) {
+      const l = lessonById2(id)!;
+      expect(l.objectives.length).toBe(7);
+      for (const o of l.objectives) expect(TASKS.some((t) => t.objective === o && t.lessons.includes(id)), `${id}: ${o}`).toBe(true);
+    }
+  });
+});

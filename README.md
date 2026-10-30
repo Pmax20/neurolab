@@ -79,3 +79,11 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   Einstellungen, Notizen und Listen vom zuletzt geänderten Gerät. „Alle Daten löschen“ leert angemeldet auch den gesicherten Stand.
 - Anmeldung mit E-Mail und Passwort (PKCE-Ablauf, damit Mail-Links mit dem Hash-Routing funktionieren).
 - Zugang nur mit Konto: Ohne Anmeldung zeigt die App nur die Anmeldeseite (`LoginGate` in `src/cloud/Account.tsx`). Das ist eine Zugangssperre für die Oberfläche; Lerninhalte und Quellcode selbst sind öffentlich abrufbar, Kims Lernstand ist durch die Datenbankregeln geschützt.
+
+## Chemie nach Seminar 2: Gleichgewicht und Säuren/Basen (Stand 30.10.2026)
+
+- `src/content/chem3.ts`: ausgebaute Lektionen „Chemisches Gleichgewicht, Löslichkeitsprodukt …“ und „Säuren, Basen, pH-Wert und Puffer“
+  (bisherige Lernziele wörtlich erhalten, je drei neue: MWG-Rechnen, Le Chatelier, Löslichkeitsprodukt bzw. schwache Säuren/Basen, Salze/Ampholyte, Titration).
+- Neue Ansichten (`src/pages/views/chem3Views.tsx`): MWG-Tabelle mit Schiebereglern, Le-Chatelier-Trainer (12 Fälle), Titrationskurve
+  (exakte Ladungsbilanz, starke und schwache Säure), pK_S-Tabelle.
+- 10 neue Rechenvorlagen und 24 Aufgaben (`tasks7.ts`).

@@ -280,6 +280,116 @@ export const CALC_TEMPLATES: CalcTemplate[] = [
       steps: [`Anteil = ${fmt(mg, 3)} mg / ${kg} kg = ${fmt(ppm, 3)} mg/kg`, `= ${fmt(ppm, 3)} ppm = ${fmt(ppm * 1000, 3)} ppb`], check: 'mg / kg = 10⁻⁶ → ppm',
       interpretation: 'Für verdünnte wässrige Lösungen gilt näherungsweise 1 ppm ≈ 1 mg/l.', pitfalls: ['ppm und ppb verwechselt (Faktor 1000).'] };
   } },
+  // ------------------------------------------------------------------ Gleichgewicht, Löslichkeitsprodukt, Säuren/Basen (nach Seminar 2)
+  { id: 'mwg-k', subject: 'Chemie', lesson: 'gleichgewicht', objective: 4, level: 1, title: 'Gleichgewichtskonstante aus Gleichgewichtskonzentrationen', source: 'zeeck', make: (r) => {
+    const kind = pick(r, ['hi', 'co'] as const);
+    if (kind === 'hi') {
+      const h2 = num(r, 0.1, 0.5, 0.05), i2 = num(r, 0.1, 0.5, 0.05), hi = num(r, 0.6, 2.4, 0.1); const K = (hi * hi) / (h2 * i2);
+      return { context: `Für H₂ + I₂ ⇌ 2 HI wurden im Gleichgewicht gemessen: [H₂] = ${fmt(h2)} mol/l, [I₂] = ${fmt(i2)} mol/l, [HI] = ${fmt(hi)} mol/l. Berechne K.`, givens: [`[H₂] = ${fmt(h2)} mol/l`, `[I₂] = ${fmt(i2)} mol/l`, `[HI] = ${fmt(hi)} mol/l`],
+        sought: 'Gleichgewichtskonstante K', soughtOptions: ['Gleichgewichtskonstante K', 'Reaktionsgeschwindigkeit', 'Stoffmenge HI', 'Löslichkeitsprodukt'],
+        formula: 'K = [HI]² / ([H₂]·[I₂])', formulaOptions: ['K = [HI]² / ([H₂]·[I₂])', 'K = [HI] / ([H₂]·[I₂])', 'K = ([H₂]·[I₂]) / [HI]²', 'K = 2·[HI] / ([H₂] + [I₂])'],
+        result: K, unit: '', units: NONE, tolerance: { rel: 0.03 },
+        steps: [`K = (${fmt(hi)})² / (${fmt(h2)} · ${fmt(i2)})`, `K = ${fmt(hi * hi)} / ${fmt(h2 * i2)} = ${fmt(K)}`], check: 'Einheiten: (mol/l)² / (mol/l)² – K ist hier dimensionslos, weil auf beiden Seiten gleich viele Teilchen stehen.',
+        interpretation: K > 1 ? 'K > 1: Das Gleichgewicht liegt auf der Seite des Iodwasserstoffs.' : 'K < 1: Das Gleichgewicht liegt auf der Eduktseite.', pitfalls: ['Koeffizient 2 nicht als Exponent geschrieben.', 'Produkte und Edukte vertauscht.'] };
+    }
+    const co = num(r, 0.2, 0.8, 0.1), h2o = num(r, 0.2, 0.8, 0.1), co2 = num(r, 0.3, 1.5, 0.1), h2 = co2; const K = (co2 * h2) / (co * h2o);
+    return { context: `Für CO + H₂O ⇌ CO₂ + H₂ (Gasphase) liegen im Gleichgewicht vor: [CO] = ${fmt(co)} mol/l, [H₂O] = ${fmt(h2o)} mol/l, [CO₂] = [H₂] = ${fmt(co2)} mol/l. Berechne K.`, givens: [`[CO] = ${fmt(co)} mol/l`, `[H₂O] = ${fmt(h2o)} mol/l`, `[CO₂] = [H₂] = ${fmt(co2)} mol/l`],
+      sought: 'Gleichgewichtskonstante K', soughtOptions: ['Gleichgewichtskonstante K', 'Stoffmenge CO₂', 'Reaktionsquotient bei Beginn', 'Löslichkeitsprodukt'],
+      formula: 'K = [CO₂]·[H₂] / ([CO]·[H₂O])', formulaOptions: ['K = [CO₂]·[H₂] / ([CO]·[H₂O])', 'K = [CO]·[H₂O] / ([CO₂]·[H₂])', 'K = [CO₂]·[H₂] / [CO]', 'K = [CO₂] + [H₂] − [CO] − [H₂O]'],
+      result: K, unit: '', units: NONE, tolerance: { rel: 0.03 },
+      steps: [`K = (${fmt(co2)} · ${fmt(h2)}) / (${fmt(co)} · ${fmt(h2o)})`, `K = ${fmt(co2 * h2)} / ${fmt(co * h2o)} = ${fmt(K)}`], check: 'Gleich viele Teilchen auf beiden Seiten → K dimensionslos.',
+      interpretation: 'Hier ist Wasser ein gasförmiger Reaktionspartner und steht deshalb im MWG – anders als Wasser als Lösungsmittel.', pitfalls: ['Wasser weggelassen (das gilt nur für Wasser als Lösungsmittel).', 'Produkte und Edukte vertauscht.'] };
+  } },
+  { id: 'mwg-ester', subject: 'Chemie', lesson: 'gleichgewicht', objective: 4, level: 3, title: 'Gleichgewichtsmenge bei der Esterbildung (quadratische Gleichung)', source: 'zeeck', make: (r) => {
+    const a = pick(r, [1, 1, 2]); const b = pick(r, [1, 2, 3, 4]); const K = 4;
+    const x = (4 * (a + b) - Math.sqrt(16 * (a + b) ** 2 - 48 * a * b)) / 6;
+    return { context: `Essigsäure + Ethanol ⇌ Essigsäureethylester + Wasser hat bei Raumtemperatur K = 4. Man setzt ${a} mol Essigsäure mit ${b} mol Ethanol um (ohne zusätzliches Wasser, Volumen kürzt sich heraus). Wie viel Ester liegt im Gleichgewicht vor?`, givens: [`n₀(Essigsäure) = ${a} mol`, `n₀(Ethanol) = ${b} mol`, 'K = 4', 'Ester und Wasser entstehen 1 : 1'],
+      sought: 'Stoffmenge Ester im Gleichgewicht', soughtOptions: ['Stoffmenge Ester im Gleichgewicht', 'Gleichgewichtskonstante K', 'Ausbeute in Prozent', 'Konzentration Ethanol am Anfang'],
+      formula: 'K = x² / ((n₀(Säure) − x)·(n₀(Alkohol) − x))', formulaOptions: ['K = x² / ((n₀(Säure) − x)·(n₀(Alkohol) − x))', 'K = x / (n₀(Säure) · n₀(Alkohol))', 'x = K · n₀(Säure)', 'K = (n₀(Säure) − x) / x'],
+      result: x, unit: 'mol', units: U({ mol: 1, mmol: 0.001 }), tolerance: { rel: 0.02 },
+      steps: ['Tabelle: Säure ' + a + ' − x, Alkohol ' + b + ' − x, Ester x, Wasser x', `4 = x² / ((${a} − x)(${b} − x))  →  3x² − ${4 * (a + b)}x + ${4 * a * b} = 0`, `x = [${4 * (a + b)} − √(${16 * (a + b) ** 2} − ${48 * a * b})] / 6 = ${fmt(x)} mol`, 'Die zweite Lösung ist größer als die eingesetzte Säuremenge und daher sinnlos.'],
+      check: 'Ergebnis in mol; es muss kleiner sein als die kleinste Anfangsmenge.',
+      interpretation: b > a ? `Mit Alkoholüberschuss entsteht mehr Ester (${fmt((x / a) * 100, 2)} % der Säure werden umgesetzt) – Le Chatelier.` : `Bei äquimolarem Einsatz werden nur 2/3 der Säure umgesetzt.`, pitfalls: ['Die falsche Lösung der quadratischen Gleichung gewählt.', 'Wasser als Lösungsmittel weggelassen – hier ist es ein Produkt und gehört ins MWG.'] };
+  } },
+  { id: 'loeslichkeit', subject: 'Chemie', lesson: 'gleichgewicht', objective: 6, level: 2, title: 'Löslichkeit aus dem Löslichkeitsprodukt', source: 'zeeck', make: (r) => {
+    const s = pick(r, [['AgCl', 1.8e-10, 'AB', 'Ag⁺', 'Cl⁻'], ['BaSO₄', 1.1e-10, 'AB', 'Ba²⁺', 'SO₄²⁻'], ['AgBr', 5.0e-13, 'AB', 'Ag⁺', 'Br⁻'], ['CaF₂', 3.9e-11, 'AB2', 'Ca²⁺', 'F⁻'], ['Mg(OH)₂', 5.6e-12, 'AB2', 'Mg²⁺', 'OH⁻']] as [string, number, 'AB' | 'AB2', string, string][]);
+    const [name, ksp, typ, cat, an] = s; const L = typ === 'AB' ? Math.sqrt(ksp) : Math.cbrt(ksp / 4);
+    return { context: `Das Löslichkeitsprodukt von ${name} beträgt ${fmt(ksp, 2)} ${typ === 'AB' ? 'mol²/l²' : 'mol³/l³'}. Wie groß ist die Löslichkeit L (in mol/l) in reinem Wasser?`, givens: [`K_L(${name}) = ${fmt(ksp, 2)} ${typ === 'AB' ? 'mol²/l²' : 'mol³/l³'}`, typ === 'AB' ? `${name} ⇌ ${cat} + ${an}` : `${name} ⇌ ${cat} + 2 ${an}`],
+      sought: 'Löslichkeit L', soughtOptions: ['Löslichkeit L', 'Löslichkeitsprodukt K_L', 'Masse des Bodenkörpers', 'Ionenprodukt'],
+      formula: typ === 'AB' ? 'K_L = L² → L = √K_L' : 'K_L = L·(2L)² = 4L³ → L = ∛(K_L/4)', formulaOptions: ['K_L = L² → L = √K_L', 'K_L = L·(2L)² = 4L³ → L = ∛(K_L/4)', 'L = K_L / 2', 'K_L = 2L² → L = √(K_L/2)'],
+      result: L, unit: 'mol/l', units: U({ 'mol/l': 1, 'mmol/l': 0.001, 'µmol/l': 1e-6, 'umol/l': 1e-6, m: 1 }), tolerance: { rel: 0.03 },
+      steps: typ === 'AB' ? [`[${cat}] = [${an}] = L`, `K_L = L² = ${fmt(ksp, 2)}`, `L = √${fmt(ksp, 2)} = ${fmt(L)} mol/l`] : [`[${cat}] = L, [${an}] = 2L`, `K_L = L · (2L)² = 4L³ = ${fmt(ksp, 2)}`, `L = ∛(${fmt(ksp, 2)} / 4) = ${fmt(L)} mol/l`],
+      check: typ === 'AB' ? '√(mol²/l²) = mol/l' : '∛(mol³/l³) = mol/l',
+      interpretation: `Pro Liter lösen sich nur etwa ${fmt(L * 1e6, 2)} µmol ${name} – ein schwer lösliches Salz.`, pitfalls: typ === 'AB' ? ['K_L halbiert statt die Wurzel gezogen.'] : ['[F⁻] bzw. [OH⁻] = 2L vergessen.', 'Den Faktor 2 nicht mitquadriert (2L² statt 4L³).'] };
+  } },
+  { id: 'ksp', subject: 'Chemie', lesson: 'gleichgewicht', objective: 6, level: 2, title: 'Löslichkeitsprodukt aus der Löslichkeit in g/l', source: 'zeeck', make: (r) => {
+    const s = pick(r, [['AgCl', 143.32, 1.9e-3], ['BaSO₄', 233.39, 2.45e-3], ['CaCO₃', 100.09, 6.0e-3]] as [string, number, number][]);
+    const [name, M, base] = s; const g = Number((base * (0.9 + r() * 0.2)).toPrecision(2)); const L = g / M; const K = L * L;
+    return { context: `In 1 l Wasser lösen sich bei 25 °C ${fmt(g, 2)} g ${name} (M = ${fmt(M, 5)} g/mol). Berechne das Löslichkeitsprodukt.`, givens: [`β = ${fmt(g, 2)} g/l`, `M(${name}) = ${fmt(M, 5)} g/mol`, 'Salz vom Typ AB: 1 Kation + 1 Anion'],
+      sought: 'Löslichkeitsprodukt K_L', soughtOptions: ['Löslichkeitsprodukt K_L', 'Löslichkeit L in mol/l', 'molare Masse', 'Gleichgewichtskonstante der Fällung'],
+      formula: 'L = β / M ; K_L = L²', formulaOptions: ['L = β / M ; K_L = L²', 'K_L = β²', 'K_L = β / M', 'L = β · M ; K_L = L²'],
+      result: K, unit: 'mol²/l²', units: U({ 'mol²/l²': 1, 'mol2/l2': 1, 'mol^2/l^2': 1 }), tolerance: { rel: 0.04 },
+      steps: [`L = ${fmt(g, 2)} g/l / ${fmt(M, 5)} g/mol = ${fmt(L)} mol/l`, `K_L = L² = (${fmt(L)})² = ${fmt(K)} mol²/l²`], check: '(mol/l)² = mol²/l²',
+      interpretation: 'Erst in Stoffmenge umrechnen, dann quadrieren – K_L bezieht sich immer auf mol/l.', pitfalls: ['Die Massenkonzentration quadriert, ohne durch M zu teilen.', 'Nicht quadriert.'] };
+  } },
+  { id: 'ph-base', subject: 'Chemie', lesson: 'saeure-base', objective: 1, level: 2, title: 'pH einer starken Base', source: 'zeeck', make: (r) => {
+    const base = pick(r, [['NaOH', 1], ['KOH', 1], ['Ca(OH)₂', 2]] as [string, number][]); const c = pick(r, [0.1, 1, 5, 10, 20, 50]);
+    const oh = (c / 1000) * base[1]; const poh = -Math.log10(oh); const ph = 14 - poh;
+    return { context: `Welchen pH hat eine ${base[0]}-Lösung mit ${fmt(c, 2)} mmol/l? (vollständige Dissoziation, 25 °C)`, givens: [`c(${base[0]}) = ${fmt(c, 2)} mmol/l`, base[1] === 2 ? 'pro Formeleinheit 2 OH⁻' : 'pro Formeleinheit 1 OH⁻', 'pH + pOH = 14'],
+      sought: 'pH-Wert', soughtOptions: ['pH-Wert', 'pOH-Wert', 'H₃O⁺-Konzentration', 'pKb-Wert'],
+      formula: 'pOH = −lg c(OH⁻) ; pH = 14 − pOH', formulaOptions: ['pOH = −lg c(OH⁻) ; pH = 14 − pOH', 'pH = −lg c(OH⁻)', 'pH = 14 + lg c(Base)  (c in mmol/l)', 'pH = 7 + c(OH⁻)'],
+      result: ph, unit: '', units: NONE, tolerance: { abs: 0.03 },
+      steps: [`c(OH⁻) = ${base[1] === 2 ? '2 · ' : ''}${fmt(c / 1000, 2)} mol/l = ${fmt(oh, 2)} mol/l`, `pOH = −lg(${fmt(oh, 2)}) = ${fmt(poh, 3)}`, `pH = 14 − ${fmt(poh, 3)} = ${fmt(ph, 3)}`], check: 'dimensionslos; Konzentration in mol/l',
+      interpretation: 'Basische Lösungen haben pH > 7; je mehr OH⁻, desto höher.', pitfalls: ['pOH als pH angegeben.', 'Bei Ca(OH)₂ die 2 OH⁻ vergessen.'] };
+  } },
+  { id: 'ph-schwach', subject: 'Chemie', lesson: 'saeure-base', objective: 4, level: 2, title: 'pH einer schwachen Säure', source: 'zeeck', make: (r) => {
+    const a = pick(r, [['Essigsäure', 4.76], ['Milchsäure', 3.86], ['Ameisensäure', 3.75], ['Ammoniumchlorid (NH₄⁺)', 9.25]] as [string, number][]);
+    const c = pick(r, [0.01, 0.05, 0.1, 0.2, 0.5, 1]); const ph = 0.5 * (a[1] - Math.log10(c));
+    return { context: `Berechne den pH einer ${fmt(c, 2)}-molaren Lösung von ${a[0]} (pK_S = ${fmt(a[1], 3)}).`, givens: [`c = ${fmt(c, 2)} mol/l`, `pK_S = ${fmt(a[1], 3)}`, 'schwache Säure: protolysiert nur teilweise'],
+      sought: 'pH-Wert', soughtOptions: ['pH-Wert', 'pK_S-Wert', 'Protolysegrad', 'pOH-Wert'],
+      formula: 'pH = ½·(pK_S − lg c)', formulaOptions: ['pH = ½·(pK_S − lg c)', 'pH = −lg c', 'pH = pK_S + lg c', 'pH = ½·(pK_S + lg c)'],
+      result: ph, unit: '', units: NONE, tolerance: { abs: 0.04 },
+      steps: [`lg c = lg ${fmt(c, 2)} = ${fmt(Math.log10(c), 3)}`, `pH = ½ · (${fmt(a[1], 3)} − (${fmt(Math.log10(c), 3)})) = ${fmt(ph, 3)}`], check: 'dimensionslos',
+      interpretation: `Eine starke Säure gleicher Konzentration hätte pH ${fmt(-Math.log10(c), 2)} – die schwache Säure ist deutlich weniger sauer.`, pitfalls: ['Mit pH = −lg c gerechnet wie bei einer starken Säure.', 'Vorzeichen von lg c übersehen (lg 0,1 = −1).'] };
+  } },
+  { id: 'ph-schwache-base', subject: 'Chemie', lesson: 'saeure-base', objective: 4, level: 3, title: 'pH einer schwachen Base (Ammoniak)', source: 'zeeck', make: (r) => {
+    const c = pick(r, [0.01, 0.05, 0.1, 0.2, 0.5]); const pkb = 14 - 9.25; const poh = 0.5 * (pkb - Math.log10(c)); const ph = 14 - poh;
+    return { context: `Berechne den pH einer Ammoniaklösung mit c(NH₃) = ${fmt(c, 2)} mol/l. Gegeben ist pK_S(NH₄⁺) = 9,25.`, givens: [`c(NH₃) = ${fmt(c, 2)} mol/l`, 'pK_S(NH₄⁺) = 9,25', 'pK_S + pK_B = 14'],
+      sought: 'pH-Wert', soughtOptions: ['pH-Wert', 'pK_B-Wert', 'pOH-Wert', 'Konzentration NH₄⁺'],
+      formula: 'pK_B = 14 − pK_S ; pOH = ½·(pK_B − lg c) ; pH = 14 − pOH', formulaOptions: ['pK_B = 14 − pK_S ; pOH = ½·(pK_B − lg c) ; pH = 14 − pOH', 'pH = ½·(pK_S − lg c)', 'pH = 14 − lg c', 'pOH = pK_S − lg c'],
+      result: ph, unit: '', units: NONE, tolerance: { abs: 0.04 },
+      steps: [`pK_B = 14 − 9,25 = ${fmt(pkb, 3)}`, `pOH = ½ · (${fmt(pkb, 3)} − (${fmt(Math.log10(c), 3)})) = ${fmt(poh, 3)}`, `pH = 14 − ${fmt(poh, 3)} = ${fmt(ph, 3)}`], check: 'dimensionslos',
+      interpretation: 'Ammoniak ist eine schwache Base: Die Lösung ist basisch, aber weit weniger als NaOH gleicher Konzentration.', pitfalls: ['Mit dem pK_S der konjugierten Säure statt mit pK_B gerechnet.', 'pOH nicht in pH umgerechnet.'] };
+  } },
+  { id: 'puffer', subject: 'Chemie', lesson: 'saeure-base', objective: 2, level: 2, title: 'pH eines Puffers (Henderson-Hasselbalch)', source: 'zeeck', make: (r) => {
+    const p = pick(r, [['Essigsäure', 'Natriumacetat', 4.76], ['Dihydrogenphosphat (H₂PO₄⁻)', 'Hydrogenphosphat (HPO₄²⁻)', 7.21], ['Ammoniumchlorid (NH₄⁺)', 'Ammoniak', 9.25]] as [string, string, number][]);
+    const nha = pick(r, [10, 20, 40, 50, 80]); const na = pick(r, [10, 20, 25, 40, 100]); const ph = p[2] + Math.log10(na / nha);
+    return { context: `Ein Puffer enthält ${nha} mmol ${p[0]} und ${na} mmol ${p[1]} in derselben Lösung (pK_S = ${fmt(p[2], 3)}). Welchen pH hat er?`, givens: [`n(Säure) = ${nha} mmol`, `n(konj. Base) = ${na} mmol`, `pK_S = ${fmt(p[2], 3)}`],
+      sought: 'pH-Wert', soughtOptions: ['pH-Wert', 'Pufferkapazität', 'pK_S-Wert', 'Stoffmenge der Säure'],
+      formula: 'pH = pK_S + lg(n(A⁻) / n(HA))', formulaOptions: ['pH = pK_S + lg(n(A⁻) / n(HA))', 'pH = pK_S + lg(n(HA) / n(A⁻))', 'pH = pK_S · n(A⁻) / n(HA)', 'pH = ½·(pK_S − lg c)'],
+      result: ph, unit: '', units: NONE, tolerance: { abs: 0.03 },
+      steps: [`Verhältnis A⁻ / HA = ${na} / ${nha} = ${fmt(na / nha)}`, `lg ${fmt(na / nha)} = ${fmt(Math.log10(na / nha), 3)}`, `pH = ${fmt(p[2], 3)} + (${fmt(Math.log10(na / nha), 3)}) = ${fmt(ph, 3)}`], check: 'Stoffmengen- oder Konzentrationsverhältnis – das Volumen kürzt sich heraus.',
+      interpretation: na === nha ? 'Bei gleichen Mengen ist pH = pK_S – maximale Pufferwirkung.' : na > nha ? 'Mehr Base als Säure: pH liegt über dem pK_S.' : 'Mehr Säure als Base: pH liegt unter dem pK_S.', pitfalls: ['Säure und Base im Bruch vertauscht.', 'Den natürlichen Logarithmus benutzt.'] };
+  } },
+  { id: 'puffer-verhaeltnis', subject: 'Chemie', lesson: 'saeure-base', objective: 3, level: 3, title: 'Verhältnis HCO₃⁻ zu CO₂ im Blut', source: 'zeeck', make: (r) => {
+    const ph = pick(r, [7.1, 7.2, 7.3, 7.4, 7.5, 7.6]); const ratio = 10 ** (ph - 6.1);
+    return { context: `Im Blut gilt für den Bikarbonatpuffer pK_S ≈ 6,1. Welches Verhältnis [HCO₃⁻] : [CO₂] liegt bei pH ${fmt(ph, 2)} vor?`, givens: [`pH = ${fmt(ph, 2)}`, 'pK_S = 6,1'],
+      sought: 'Verhältnis [HCO₃⁻] / [CO₂]', soughtOptions: ['Verhältnis [HCO₃⁻] / [CO₂]', 'pCO₂ in mmHg', 'pK_S-Wert', 'Konzentration HCO₃⁻'],
+      formula: '[A⁻]/[HA] = 10^(pH − pK_S)', formulaOptions: ['[A⁻]/[HA] = 10^(pH − pK_S)', '[A⁻]/[HA] = pH − pK_S', '[A⁻]/[HA] = 10^(pK_S − pH)', '[A⁻]/[HA] = pH / pK_S'],
+      result: ratio, unit: '', units: NONE, tolerance: { rel: 0.03 },
+      steps: [`pH − pK_S = ${fmt(ph, 2)} − 6,1 = ${fmt(ph - 6.1, 2)}`, `Verhältnis = 10^${fmt(ph - 6.1, 2)} = ${fmt(ratio)}`], check: 'dimensionslos',
+      interpretation: ph === 7.4 ? 'Bei normalem pH 7,4 ist das Verhältnis etwa 20 : 1.' : ph < 7.35 ? 'Weniger HCO₃⁻ im Verhältnis zu CO₂ als normal (20 : 1): Azidose.' : ph > 7.45 ? 'Mehr HCO₃⁻ im Verhältnis zu CO₂ als normal: Alkalose.' : 'Im Normalbereich von etwa 20 : 1.', pitfalls: ['Exponent vertauscht (pK_S − pH).', 'Die Differenz direkt als Verhältnis genommen.'] };
+  } },
+  { id: 'titration', subject: 'Chemie', lesson: 'saeure-base', objective: 6, level: 2, title: 'Verbrauch an Natronlauge bei der Titration', source: 'zeeck', make: (r) => {
+    const a = pick(r, [['Salzsäure', 'HCl', 1], ['Schwefelsäure', 'H₂SO₄', 2], ['Essigsäure', 'CH₃COOH', 1]] as [string, string, number][]);
+    const ca = pick(r, [0.05, 0.1, 0.2, 0.5]); const Va = pick(r, [10, 20, 25, 50]); const cb = pick(r, [0.1, 0.2, 0.5, 1]); const Vb = (a[2] * ca * Va) / cb;
+    return { context: `${Va} ml ${a[0]} (${a[1]}, c = ${fmt(ca, 2)} mol/l) werden mit Natronlauge (c = ${fmt(cb, 2)} mol/l) titriert. Wie viel Natronlauge wird bis zum Äquivalenzpunkt verbraucht?`, givens: [`V(Säure) = ${Va} ml`, `c(Säure) = ${fmt(ca, 2)} mol/l`, `c(NaOH) = ${fmt(cb, 2)} mol/l`, `abgegebene Protonen pro Molekül: z = ${a[2]}`],
+      sought: 'Volumen Natronlauge', soughtOptions: ['Volumen Natronlauge', 'pH am Äquivalenzpunkt', 'Stoffmenge Säure', 'Konzentration der Natronlauge'],
+      formula: 'V(NaOH) = z · c(Säure) · V(Säure) / c(NaOH)', formulaOptions: ['V(NaOH) = z · c(Säure) · V(Säure) / c(NaOH)', 'V(NaOH) = c(NaOH) · V(Säure) / c(Säure)', 'V(NaOH) = V(Säure)', 'V(NaOH) = c(Säure) · V(Säure) · c(NaOH)'],
+      result: Vb, unit: 'ml', units: U({ ml: 1, l: 1000, 'cm³': 1 }), tolerance: { rel: 0.02 },
+      steps: [`n(H⁺) = ${a[2] > 1 ? `${a[2]} · ` : ''}${fmt(ca, 2)} mol/l · ${fmt(Va / 1000, 3)} l = ${fmt((a[2] * ca * Va) / 1000)} mol`, `V(NaOH) = ${fmt((a[2] * ca * Va) / 1000)} mol / ${fmt(cb, 2)} mol/l = ${fmt(Vb / 1000)} l = ${fmt(Vb)} ml`], check: 'mol / (mol/l) = l → in ml umrechnen',
+      interpretation: a[1] === 'CH₃COOH' ? 'Der Verbrauch hängt nur von der Stoffmenge ab, nicht von der Säurestärke – der pH am Äquivalenzpunkt liegt bei Essigsäure aber im Basischen.' : a[2] === 2 ? 'Schwefelsäure verbraucht doppelt so viel Lauge wie eine gleich konzentrierte einprotonige Säure.' : 'Bei starker Säure und starker Base liegt der Äquivalenzpunkt bei pH 7.', pitfalls: ['Bei Schwefelsäure z = 2 vergessen.', 'Gedacht, eine schwache Säure verbrauche weniger Lauge.'] };
+  } },
   // ------------------------------------------------------------------ Physik
   { id: 'geschw', subject: 'Physik', lesson: 'groessen-bewegung', objective: 2, level: 1, title: 'Geschwindigkeit', source: 'harten', make: (r) => {
     const s = num(r, 100, 1500, 50); const t = num(r, 60, 600, 30); const v = s / t;
