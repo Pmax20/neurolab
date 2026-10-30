@@ -331,3 +331,23 @@ describe('Chemie nach Seminar 2: Gleichgewicht und Titration', () => {
     }
   });
 });
+
+import { NAMING } from '../pages/views/chem4Views';
+import { checkBalance as checkBalance2 } from './chemtools';
+describe('Kohlenwasserstoffe', () => {
+  test('jedes Lernziel hat eine Aufgabe, Verbrennungsgleichungen sind ausgeglichen', () => {
+    const l = lessonById2('kohlenwasserstoffe')!;
+    for (const o of l.objectives) expect(TASKS.some((t) => t.objective === o && t.lessons.includes(l.id)), o).toBe(true);
+    for (const t of TASKS) if (t.type === 'balance' && t.lessons.includes('kohlenwasserstoffe')) expect(checkBalance2(t.reactants, t.products, t.coefficients).balanced, t.id).toBe(true);
+  });
+  test('Benennungstrainer: Zeichnungen und Hauptketten stimmig, jedes C hat höchstens vier Bindungen', () => {
+    for (const m of NAMING) {
+      expect(m.wrong.map((w) => w[0])).not.toContain(m.name);
+      for (const i of m.chain) expect(m.pts[i], m.name).toBeTruthy();
+      const val = m.pts.map(() => 0);
+      for (const [a, b, o] of m.bonds) { val[a] += o; val[b] += o; }
+      for (const v of val) expect(v, m.name).toBeLessThanOrEqual(4);
+      for (let k = 1; k < m.chain.length; k++) expect(m.bonds.some(([a, b]) => (a === m.chain[k - 1] && b === m.chain[k]) || (b === m.chain[k - 1] && a === m.chain[k])), `${m.name}: Kette`).toBe(true);
+    }
+  });
+});

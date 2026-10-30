@@ -87,3 +87,10 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
 - Neue Ansichten (`src/pages/views/chem3Views.tsx`): MWG-Tabelle mit Schiebereglern, Le-Chatelier-Trainer (12 Fälle), Titrationskurve
   (exakte Ladungsbilanz, starke und schwache Säure), pK_S-Tabelle.
 - 10 neue Rechenvorlagen und 24 Aufgaben (`tasks7.ts`).
+
+## Kohlenwasserstoffe (Stand 30.10.2026)
+
+- Neue Lektion `kohlenwasserstoffe` (`src/content/chem4.ts`) vor „Organische Chemie: funktionelle Gruppen“: Alkane, Alkene, Alkine,
+  Hybridisierung, Nomenklatur, Isomerie, Eigenschaften, radikalische Substitution, elektrophile Addition, Verbrennung, biologische Bezüge.
+- Ansicht `hydrocarbons` (`src/pages/views/chem4Views.tsx`): Vergleich sp³/sp²/sp, Benennungstrainer mit 14 Gerüstformeln, homologe Reihe
+  mit Siedetemperaturen, Mechanismen Schritt für Schritt. 24 Aufgaben (`tasks8.ts`) und 2 Rechenvorlagen.

@@ -390,6 +390,26 @@ export const CALC_TEMPLATES: CalcTemplate[] = [
       steps: [`n(H⁺) = ${a[2] > 1 ? `${a[2]} · ` : ''}${fmt(ca, 2)} mol/l · ${fmt(Va / 1000, 3)} l = ${fmt((a[2] * ca * Va) / 1000)} mol`, `V(NaOH) = ${fmt((a[2] * ca * Va) / 1000)} mol / ${fmt(cb, 2)} mol/l = ${fmt(Vb / 1000)} l = ${fmt(Vb)} ml`], check: 'mol / (mol/l) = l → in ml umrechnen',
       interpretation: a[1] === 'CH₃COOH' ? 'Der Verbrauch hängt nur von der Stoffmenge ab, nicht von der Säurestärke – der pH am Äquivalenzpunkt liegt bei Essigsäure aber im Basischen.' : a[2] === 2 ? 'Schwefelsäure verbraucht doppelt so viel Lauge wie eine gleich konzentrierte einprotonige Säure.' : 'Bei starker Säure und starker Base liegt der Äquivalenzpunkt bei pH 7.', pitfalls: ['Bei Schwefelsäure z = 2 vergessen.', 'Gedacht, eine schwache Säure verbrauche weniger Lauge.'] };
   } },
+  { id: 'alkan-masse', subject: 'Chemie', lesson: 'kohlenwasserstoffe', objective: 0, level: 1, title: 'Molare Masse eines Alkans', source: 'zeeck', make: (r) => {
+    const names = ['Methan', 'Ethan', 'Propan', 'Butan', 'Pentan', 'Hexan', 'Heptan', 'Octan', 'Nonan', 'Decan'];
+    const n = pick(r, [3, 4, 5, 6, 7, 8, 9, 10]); const h = 2 * n + 2; const M = n * 12.01 + h * 1.008;
+    return { context: `Berechne die molare Masse von ${names[n - 1]} (M(C) = 12,01 g/mol, M(H) = 1,008 g/mol).`, givens: [`${names[n - 1]}: Alkan mit ${n} C-Atomen`, 'M(C) = 12,01 g/mol', 'M(H) = 1,008 g/mol'],
+      sought: 'molare Masse M', soughtOptions: ['molare Masse M', 'Stoffmenge n', 'Masse m', 'Zahl der Isomere'],
+      formula: 'CₙH₂ₙ₊₂ ; M = n·M(C) + (2n+2)·M(H)', formulaOptions: ['CₙH₂ₙ₊₂ ; M = n·M(C) + (2n+2)·M(H)', 'CₙH₂ₙ ; M = n·M(C) + 2n·M(H)', 'M = n·M(C)', 'CₙH₂ₙ₋₂ ; M = n·M(C) + (2n−2)·M(H)'],
+      result: M, unit: 'g/mol', units: U({ 'g/mol': 1, 'kg/mol': 1000 }), tolerance: { rel: 0.005 },
+      steps: [`Summenformel: C${n}H${h}`, `M = ${n} · 12,01 + ${h} · 1,008 = ${fmt(n * 12.01, 4)} + ${fmt(h * 1.008, 4)} = ${fmt(M, 4)} g/mol`], check: 'g/mol',
+      interpretation: 'Jede zusätzliche CH₂-Gruppe erhöht die molare Masse um etwa 14 g/mol.', pitfalls: ['Mit der Alken-Formel CₙH₂ₙ gerechnet.', 'Die zwei zusätzlichen H an den Kettenenden vergessen.'] };
+  } },
+  { id: 'verbrennung-co2', subject: 'Chemie', lesson: 'kohlenwasserstoffe', objective: 5, level: 2, title: 'CO₂ aus der Verbrennung eines Kohlenwasserstoffs', source: 'zeeck', make: (r) => {
+    const g = pick(r, [['Methan', 'CH₄', 16.04, 1], ['Propan', 'C₃H₈', 44.1, 3], ['Butan', 'C₄H₁₀', 58.12, 4], ['Octan', 'C₈H₁₈', 114.23, 8]] as [string, string, number, number][]);
+    const m = pick(r, [10, 22, 44, 100, 250, 1000]); const n = m / g[2]; const mco2 = n * g[3] * 44.01;
+    return { context: `${m} g ${g[0]} (${g[1]}, M = ${fmt(g[2], 4)} g/mol) verbrennen vollständig. Wie viel Gramm CO₂ entstehen? (M(CO₂) = 44,01 g/mol)`, givens: [`m(${g[1]}) = ${m} g`, `M(${g[1]}) = ${fmt(g[2], 4)} g/mol`, `pro Molekül ${g[3]} C → ${g[3]} CO₂`, 'M(CO₂) = 44,01 g/mol'],
+      sought: 'Masse CO₂', soughtOptions: ['Masse CO₂', 'Stoffmenge O₂', 'Masse Wasser', 'Volumen CO₂'],
+      formula: 'n(KW) = m/M ; n(CO₂) = Zahl der C · n(KW) ; m(CO₂) = n · M(CO₂)', formulaOptions: ['n(KW) = m/M ; n(CO₂) = Zahl der C · n(KW) ; m(CO₂) = n · M(CO₂)', 'm(CO₂) = m(KW)', 'm(CO₂) = m(KW) · M(CO₂)', 'n(CO₂) = n(KW) ; m(CO₂) = n · M(CO₂)'],
+      result: mco2, unit: 'g', units: U({ g: 1, kg: 1000, mg: 0.001 }), tolerance: { rel: 0.02 },
+      steps: [`n(${g[1]}) = ${m} g / ${fmt(g[2], 4)} g/mol = ${fmt(n)} mol`, `n(CO₂) = ${g[3]} · ${fmt(n)} mol = ${fmt(n * g[3])} mol`, `m(CO₂) = ${fmt(n * g[3])} mol · 44,01 g/mol = ${fmt(mco2)} g`], check: 'mol · g/mol = g',
+      interpretation: `Es entsteht mehr CO₂ (Masse) als Brennstoff eingesetzt wurde, weil der Sauerstoff aus der Luft dazukommt.`, pitfalls: ['Die Zahl der C-Atome pro Molekül vergessen.', 'Massen direkt gleichgesetzt statt über Stoffmengen zu rechnen.'] };
+  } },
   // ------------------------------------------------------------------ Physik
   { id: 'geschw', subject: 'Physik', lesson: 'groessen-bewegung', objective: 2, level: 1, title: 'Geschwindigkeit', source: 'harten', make: (r) => {
     const s = num(r, 100, 1500, 50); const t = num(r, 60, 600, 30); const v = s / t;

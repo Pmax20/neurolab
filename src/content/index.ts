@@ -11,6 +11,8 @@ import { ANATOMY2_LESSONS, ANATOMY2_STRUCTURES, TISSUE2_STRUCTURES } from './ana
 import { TASKS_6 } from './tasks6';
 import { TASKS_7 } from './tasks7';
 import { upgradeGleichgewicht, upgradeSaeureBase } from './chem3';
+import { HYDROCARBON_LESSONS } from './chem4';
+import { TASKS_8 } from './tasks8';
 import { TASKS_4 } from './tasks4';
 import { TASKS_5 } from './tasks5';
 import { PHYS2_LESSONS, CHEM2_LESSONS, HISTO2_LESSONS } from './semester1b';
@@ -23,10 +25,10 @@ const GUIDED_EXPERIMENTS = [...GUIDED_3, ...GUIDED_1];
 const RELOCATE: Record<string, Lesson['module']> = { membran: 'cell' };
 // Ausgebaute Fassungen (Chemie nach Seminar 2)
 const UPGRADE: Record<string, (l: Lesson) => Lesson> = { gleichgewicht: upgradeGleichgewicht, 'saeure-base': upgradeSaeureBase };
-export const LESSONS: Lesson[] = [...ANATOMY_LESSONS, ...ANATOMY2_LESSONS, ...NEURO_LESSONS, ...CELL_LESSONS, ...MOLPHYS_LESSONS, ...CHEM_LESSONS, ...PHYS_LESSONS, ...BIO_LESSONS, ...HISTO_LESSONS, ...TERM_LESSONS, ...PHYS2_LESSONS, ...CHEM2_LESSONS, ...HISTO2_LESSONS]
+export const LESSONS: Lesson[] = [...ANATOMY_LESSONS, ...ANATOMY2_LESSONS, ...NEURO_LESSONS, ...CELL_LESSONS, ...MOLPHYS_LESSONS, ...CHEM_LESSONS, ...PHYS_LESSONS, ...BIO_LESSONS, ...HISTO_LESSONS, ...TERM_LESSONS, ...PHYS2_LESSONS, ...CHEM2_LESSONS, ...HISTO2_LESSONS, ...HYDROCARBON_LESSONS]
   .map((l) => (RELOCATE[l.id] ? { ...l, module: RELOCATE[l.id] } : l))
   .map((l) => (UPGRADE[l.id] ? UPGRADE[l.id](l) : l));
-const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...TASKS_7, ...calcTasks(LESSONS)];
+const TASKS: Task[] = [...TASKS_1, ...TASKS_2, ...TASKS_3, ...TASKS_4, ...TASKS_5, ...TASKS_6, ...TASKS_7, ...TASKS_8, ...calcTasks(LESSONS)];
 export const STRUCTURES: Structure[] = [...NEURO_STRUCTURES, ...MUSCLE_STRUCTURES, ...CELL_STRUCTURES, ...TISSUE_STRUCTURES, ...ANATOMY_STRUCTURES, ...ANATOMY2_STRUCTURES, ...TISSUE2_STRUCTURES];
 export { TASKS, GUIDED_EXPERIMENTS, MOLECULES, TERM_CARDS };
 
@@ -39,7 +41,7 @@ export const MODULES: LearningModule[] = [
   { id: 'anatomy', title: 'Anatomie', area: 'Funktionelle Anatomie I · Seminar Anatomie', semesters: [1, 2], description: 'Einführung, Embryologie, Knochen, Gelenke und Muskeln, dann Nervensystem, Herz und Kreislauf, Rumpfwand und Extremitäten – in der Reihenfolge des Leipziger Themenplans.',
     lessons: ['allgemeine-anatomie', 'embryologie', 'knochen', 'gelenke', 'muskellehre', 'nervensystem', 'herz', 'gefaesssystem', 'rumpfwand', 'obere-extremitaet', 'untere-extremitaet'] },
   { id: 'molecule', title: 'Chemie', area: 'Chemie für Mediziner', semesters: [1, 2], description: 'Allgemeine und anorganische Chemie im 1. Semester, organische und Naturstoffchemie im 2. Semester.',
-    lessons: ['atommodell', 'periodensystem', 'bindungen', 'stoechiometrie', 'konzentrationen', 'gleichgewicht', 'saeure-base', 'redox', 'komplexe', 'organik', 'molekuele', 'naturstoffe'] },
+    lessons: ['atommodell', 'periodensystem', 'bindungen', 'stoechiometrie', 'konzentrationen', 'gleichgewicht', 'saeure-base', 'redox', 'komplexe', 'kohlenwasserstoffe', 'organik', 'molekuele', 'naturstoffe'] },
   { id: 'cell', title: 'Biologie', area: 'Biologie für Mediziner', semesters: [1], description: 'Zelle, Membran und Transport, Zellteilung, Vererbung, Genexpression, Mikroorganismen.',
     lessons: ['zellaufbau', 'membran', 'stofftransport', 'osmose', 'zellzyklus', 'genetik', 'proteinbiosynthese', 'mikroorganismen', 'energiegewinnung', 'enzyme'] },
   { id: 'physics', title: 'Physik', area: 'Physik und Biophysik', semesters: [1, 2], description: 'Einheiten, Bewegung, Kräfte, Energie, Druck, Strömung, Diffusion, Elektrizität, Optik, Ultraschall und Radioaktivität – immer mit medizinischem Bezug.',
