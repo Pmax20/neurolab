@@ -410,6 +410,128 @@ export const CALC_TEMPLATES: CalcTemplate[] = [
       steps: [`n(${g[1]}) = ${m} g / ${fmt(g[2], 4)} g/mol = ${fmt(n)} mol`, `n(CO₂) = ${g[3]} · ${fmt(n)} mol = ${fmt(n * g[3])} mol`, `m(CO₂) = ${fmt(n * g[3])} mol · 44,01 g/mol = ${fmt(mco2)} g`], check: 'mol · g/mol = g',
       interpretation: `Es entsteht mehr CO₂ (Masse) als Brennstoff eingesetzt wurde, weil der Sauerstoff aus der Luft dazukommt.`, pitfalls: ['Die Zahl der C-Atome pro Molekül vergessen.', 'Massen direkt gleichgesetzt statt über Stoffmengen zu rechnen.'] };
   } },
+  // ------------------------------------------------------------------ Atombau, Osmose, Elektrochemie, Energetik und Kinetik
+  { id: 'atommasse-mittel', subject: 'Chemie', lesson: 'atommodell', objective: 3, level: 2, title: 'Mittlere Atommasse aus Isotopenhäufigkeiten', source: 'zeeck', make: (r) => {
+    const e = pick(r, [['Chlor', '³⁵Cl', 34.969, '³⁷Cl', 36.966, 75.78], ['Kupfer', '⁶³Cu', 62.930, '⁶⁵Cu', 64.928, 69.15], ['Bor', '¹⁰B', 10.013, '¹¹B', 11.009, 19.9], ['Brom', '⁷⁹Br', 78.918, '⁸¹Br', 80.916, 50.69]] as [string, string, number, string, number, number][]);
+    const [name, i1, m1, i2, m2, p1] = e; const M = (p1 / 100) * m1 + (1 - p1 / 100) * m2;
+    return { context: `${name} besteht in der Natur zu ${fmt(p1, 4)} % aus ${i1} (${fmt(m1, 5)} u) und zu ${fmt(100 - p1, 4)} % aus ${i2} (${fmt(m2, 5)} u). Berechne die mittlere Atommasse.`, givens: [`${i1}: ${fmt(p1, 4)} %, ${fmt(m1, 5)} u`, `${i2}: ${fmt(100 - p1, 4)} %, ${fmt(m2, 5)} u`],
+      sought: 'mittlere Atommasse', soughtOptions: ['mittlere Atommasse', 'Massenzahl', 'Neutronenzahl', 'Ordnungszahl'],
+      formula: 'M = Anteil₁ · m₁ + Anteil₂ · m₂', formulaOptions: ['M = Anteil₁ · m₁ + Anteil₂ · m₂', 'M = (m₁ + m₂) / 2', 'M = Anteil₁ · m₁', 'M = Prozent₁ · m₁ + Prozent₂ · m₂'],
+      result: M, unit: 'u', units: U({ u: 1, 'g/mol': 1, da: 1 }), tolerance: { rel: 0.001 },
+      steps: [`M = ${fmt(p1 / 100, 4)} · ${fmt(m1, 5)} u + ${fmt(1 - p1 / 100, 4)} · ${fmt(m2, 5)} u`, `M = ${fmt((p1 / 100) * m1, 5)} u + ${fmt((1 - p1 / 100) * m2, 5)} u = ${fmt(M, 5)} u`], check: 'Das Ergebnis muss zwischen den beiden Isotopenmassen liegen, näher am häufigeren.',
+      interpretation: `Das ist die Atommasse im Periodensystem (${name} ≈ ${fmt(M, 4)}); in g/mol hat die molare Masse denselben Zahlenwert.`, pitfalls: ['Einfach den Mittelwert der beiden Massen gebildet.', 'Prozent nicht durch 100 geteilt.'] };
+  } },
+  { id: 'neutronen', subject: 'Chemie', lesson: 'atommodell', objective: 1, level: 1, title: 'Neutronenzahl aus Massen- und Ordnungszahl', source: 'zeeck', make: (r) => {
+    const n = pick(r, [['Kohlenstoff-14', 'C', 6, 14], ['Iod-131', 'I', 53, 131], ['Technetium-99', 'Tc', 43, 99], ['Kalium-40', 'K', 19, 40], ['Uran-235', 'U', 92, 235], ['Fluor-18', 'F', 9, 18], ['Cobalt-60', 'Co', 27, 60]] as [string, string, number, number][]);
+    const N = n[3] - n[2];
+    return { context: `Wie viele Neutronen enthält ein Atomkern von ${n[0]} (Ordnungszahl ${n[2]})?`, givens: [`Massenzahl A = ${n[3]}`, `Ordnungszahl Z = ${n[2]} (${n[1]})`],
+      sought: 'Neutronenzahl', soughtOptions: ['Neutronenzahl', 'Protonenzahl', 'Elektronenzahl', 'Nukleonenzahl'],
+      formula: 'N = A − Z', formulaOptions: ['N = A − Z', 'N = A + Z', 'N = Z', 'N = A / 2'],
+      result: N, unit: '', units: COUNT, tolerance: { abs: 0.01 },
+      steps: [`N = ${n[3]} − ${n[2]} = ${N}`], check: 'ganze Zahl, dimensionslos',
+      interpretation: `${n[0]} hat ${n[2]} Protonen und ${N} Neutronen; Isotope desselben Elements unterscheiden sich nur in N.`, pitfalls: ['Massenzahl und Ordnungszahl verwechselt.', 'Elektronen mitgezählt.'] };
+  } },
+  { id: 'osmo-druck', subject: 'Chemie', lesson: 'konzentrationen', objective: 4, level: 2, title: 'Osmotischer Druck (van’t Hoff)', source: 'zeeck', make: (r) => {
+    const s = pick(r, [['Glukoselösung', 1, 'mmol/l'], ['Kochsalzlösung', 2, 'mmol/l'], ['Calciumchloridlösung', 3, 'mmol/l']] as [string, number, string][]);
+    const c = pick(r, [50, 100, 150, 280]); const T = pick(r, [298, 310]); const osm = c * s[1]; const pi = (osm / 1000) * 1000 * 8.314 * T / 1000;
+    return { context: `Welchen osmotischen Druck hat eine ${s[0]} mit c = ${c} mmol/l bei ${T} K (ideales Verhalten, vollständige Dissoziation)?`, givens: [`c = ${c} mmol/l`, `Teilchen pro Formeleinheit: ${s[1]}`, `T = ${T} K`, 'R = 8,314 J/(mol·K)'],
+      sought: 'osmotischer Druck π', soughtOptions: ['osmotischer Druck π', 'Osmolarität', 'Gefrierpunktserniedrigung', 'Stoffmenge'],
+      formula: 'π = c_osm · R · T', formulaOptions: ['π = c_osm · R · T', 'π = c · R / T', 'π = R · T / c_osm', 'π = c_osm · T'],
+      result: pi, unit: 'kPa', units: U({ kpa: 1, pa: 0.001, bar: 100, mbar: 0.1, atm: 101.325 }), tolerance: { rel: 0.02 },
+      steps: [`c_osm = ${c} · ${s[1]} = ${osm} mosmol/l = ${fmt(osm, 3)} mol/m³`, `π = ${fmt(osm, 3)} mol/m³ · 8,314 J/(mol·K) · ${T} K = ${fmt(pi * 1000)} Pa = ${fmt(pi)} kPa`], check: 'mol/l in mol/m³ umrechnen (× 1000); mol/m³ · J/(mol·K) · K = J/m³ = Pa',
+      interpretation: `Das entspricht etwa ${fmt(pi / 100, 2)} bar – osmotische Drücke sind erstaunlich groß.`, pitfalls: ['mmol/l nicht in mol/m³ umgerechnet (Faktor 1000 bzw. 10⁶).', 'Teilchenzahl bei Salzen vergessen.', 'Temperatur in °C eingesetzt.'] };
+  } },
+  { id: 'zellspannung', subject: 'Chemie', lesson: 'redox', objective: 4, level: 2, title: 'Spannung einer galvanischen Zelle', source: 'zeeck', make: (r) => {
+    const M: [string, number][] = [['Mg', -2.37], ['Al', -1.66], ['Zn', -0.76], ['Fe', -0.44], ['Pb', -0.13], ['Cu', 0.34], ['Ag', 0.8]];
+    let a = pick(r, M), b = pick(r, M); while (a[0] === b[0]) b = pick(r, M);
+    const [an, ca] = a[1] < b[1] ? [a, b] : [b, a]; const dE = ca[1] - an[1];
+    return { context: `Eine galvanische Zelle besteht aus einer ${a[0]}-Elektrode in ${a[0]}-Salzlösung und einer ${b[0]}-Elektrode in ${b[0]}-Salzlösung (je 1 mol/l). Welche Spannung liefert sie?`, givens: [`E°(${a[0]}/${a[0]}ⁿ⁺) = ${fmt(a[1], 3)} V`, `E°(${b[0]}/${b[0]}ⁿ⁺) = ${fmt(b[1], 3)} V`],
+      sought: 'Zellspannung ΔE', soughtOptions: ['Zellspannung ΔE', 'Stromstärke', 'Standardpotenzial', 'freie Enthalpie'],
+      formula: 'ΔE = E°(Kathode) − E°(Anode)', formulaOptions: ['ΔE = E°(Kathode) − E°(Anode)', 'ΔE = E°(Anode) − E°(Kathode)', 'ΔE = E°(Kathode) + E°(Anode)', 'ΔE = E°(Kathode) · E°(Anode)'],
+      result: dE, unit: 'V', units: U({ v: 1, mv: 0.001 }), tolerance: { abs: 0.005 },
+      steps: [`Unedler: ${an[0]} (${fmt(an[1], 3)} V) → wird oxidiert, Anode (Minuspol)`, `Edler: ${ca[0]} (${fmt(ca[1], 3)} V) → Ionen werden reduziert, Kathode (Pluspol)`, `ΔE = ${fmt(ca[1], 3)} − (${fmt(an[1], 3)}) = ${fmt(dE, 3)} V`], check: 'V − V = V; die Zellspannung ist positiv.',
+      interpretation: `Elektronen fließen von ${an[0]} zu ${ca[0]}. Je weiter die Metalle in der Spannungsreihe auseinanderliegen, desto größer die Spannung.`, pitfalls: ['Potenziale addiert statt subtrahiert.', 'Anode und Kathode vertauscht (negative Spannung).'] };
+  } },
+  { id: 'nernst', subject: 'Chemie', lesson: 'redox', objective: 5, level: 3, title: 'Nernst-Gleichung', source: 'zeeck', make: (r) => {
+    const p = pick(r, [['Fe³⁺/Fe²⁺', 0.77, 1, 'Fe³⁺', 'Fe²⁺'], ['Cu²⁺/Cu', 0.34, 2, 'Cu²⁺', 'Cu (fest, Aktivität 1)'], ['Zn²⁺/Zn', -0.76, 2, 'Zn²⁺', 'Zn (fest, Aktivität 1)']] as [string, number, number, string, string][]);
+    const ratio = pick(r, [0.001, 0.01, 0.1, 10, 100]); const E = p[1] + (0.059 / p[2]) * Math.log10(ratio);
+    const metal = p[4].includes('fest');
+    return { context: metal ? `Berechne das Potenzial der Elektrode ${p[0]} bei c(${p[3]}) = ${fmt(ratio, 2)} mol/l (25 °C).` : `Berechne das Potenzial des Paares ${p[0]}, wenn [${p[3]}] / [${p[4]}] = ${fmt(ratio, 2)} ist (25 °C).`, givens: [`E° = ${fmt(p[1], 3)} V`, `z = ${p[2]}`, metal ? `c(${p[3]}) = ${fmt(ratio, 2)} mol/l, Metall: Aktivität 1` : `[Ox]/[Red] = ${fmt(ratio, 2)}`],
+      sought: 'Elektrodenpotenzial E', soughtOptions: ['Elektrodenpotenzial E', 'Standardpotenzial E°', 'Zellspannung', 'Stoffmenge'],
+      formula: 'E = E° + (0,059 V / z) · lg([Ox]/[Red])', formulaOptions: ['E = E° + (0,059 V / z) · lg([Ox]/[Red])', 'E = E° − (0,059 V / z) · lg([Ox]/[Red])', 'E = E° · [Ox]/[Red]', 'E = E° + 0,059 V · z · lg([Ox]/[Red])'],
+      result: E, unit: 'V', units: U({ v: 1, mv: 0.001 }), tolerance: { abs: 0.004 },
+      steps: [`lg(${fmt(ratio, 2)}) = ${fmt(Math.log10(ratio), 2)}`, `E = ${fmt(p[1], 3)} V + (0,059 V / ${p[2]}) · (${fmt(Math.log10(ratio), 2)}) = ${fmt(E, 3)} V`], check: 'V; lg-Term dimensionslos',
+      interpretation: ratio > 1 ? 'Mehr oxidierte Form → Potenzial positiver als E°.' : 'Weniger oxidierte Form → Potenzial negativer als E°.', pitfalls: ['Red und Ox im Bruch vertauscht.', 'Durch z teilen vergessen.'] };
+  } },
+  { id: 'redox-dg', subject: 'Chemie', lesson: 'redox', objective: 2, level: 2, title: 'Freie Enthalpie aus der Zellspannung', source: 'zeeck', make: (r) => {
+    const c = pick(r, [['Daniell-Element Zn/Cu', 1.10, 2], ['NADH → O₂ (Atmungskette)', 1.14, 2], ['Fe²⁺ + Ag⁺ → Fe³⁺ + Ag', 0.03, 1], ['Zn + 2 Ag⁺', 1.56, 2]] as [string, number, number][]);
+    const dG = (-c[2] * 96485 * c[1]) / 1000;
+    return { context: `Berechne ΔG für ${c[0]} mit ΔE = ${fmt(c[1], 3)} V und z = ${c[2]} übertragenen Elektronen.`, givens: [`ΔE = ${fmt(c[1], 3)} V`, `z = ${c[2]}`, 'F = 96 485 C/mol'],
+      sought: 'freie Enthalpie ΔG', soughtOptions: ['freie Enthalpie ΔG', 'Zellspannung', 'Ladung', 'Gleichgewichtskonstante'],
+      formula: 'ΔG = −z · F · ΔE', formulaOptions: ['ΔG = −z · F · ΔE', 'ΔG = z · F · ΔE', 'ΔG = −F · ΔE / z', 'ΔG = −z · ΔE'],
+      result: dG, unit: 'kJ/mol', units: U({ 'kj/mol': 1, 'j/mol': 0.001 }), tolerance: { rel: 0.02 },
+      steps: [`ΔG = −${c[2]} · 96 485 C/mol · ${fmt(c[1], 3)} V = ${fmt(dG * 1000)} J/mol`, `= ${fmt(dG)} kJ/mol`], check: 'C · V = J; also J/mol → kJ/mol',
+      interpretation: 'Negatives ΔG: Die Reaktion läuft freiwillig ab.', pitfalls: ['Minuszeichen vergessen.', 'J nicht in kJ umgerechnet.'] };
+  } },
+  { id: 'hess', subject: 'Chemie', lesson: 'energetik-kinetik', objective: 0, level: 2, title: 'Reaktionsenthalpie aus Bildungsenthalpien', source: 'zeeck', make: (r) => {
+    const x = pick(r, [['Methan', 'CH₄ + 2 O₂ → CO₂ + 2 H₂O(l)', -74.8, 1, 2], ['Ethanol', 'C₂H₅OH + 3 O₂ → 2 CO₂ + 3 H₂O(l)', -277.7, 2, 3], ['Glukose', 'C₆H₁₂O₆ + 6 O₂ → 6 CO₂ + 6 H₂O(l)', -1273.3, 6, 6]] as [string, string, number, number, number][]);
+    const dH = x[3] * -393.5 + x[4] * -285.8 - x[2];
+    return { context: `Berechne die Verbrennungsenthalpie von ${x[0]}: ${x[1]}.`, givens: [`ΔH_f(${x[0]}) = ${fmt(x[2], 5)} kJ/mol`, 'ΔH_f(CO₂) = −393,5 kJ/mol', 'ΔH_f(H₂O, flüssig) = −285,8 kJ/mol', 'ΔH_f(O₂) = 0 (Element)'],
+      sought: 'Reaktionsenthalpie ΔH_R', soughtOptions: ['Reaktionsenthalpie ΔH_R', 'Bildungsenthalpie', 'freie Enthalpie', 'Aktivierungsenergie'],
+      formula: 'ΔH_R = Σ ΔH_f(Produkte) − Σ ΔH_f(Edukte)', formulaOptions: ['ΔH_R = Σ ΔH_f(Produkte) − Σ ΔH_f(Edukte)', 'ΔH_R = Σ ΔH_f(Edukte) − Σ ΔH_f(Produkte)', 'ΔH_R = Σ ΔH_f(Produkte) + Σ ΔH_f(Edukte)', 'ΔH_R = ΔH_f(CO₂)'],
+      result: dH, unit: 'kJ/mol', units: U({ 'kj/mol': 1, 'j/mol': 0.001, kj: 1 }), tolerance: { rel: 0.01 },
+      steps: [`Produkte: ${x[3]} · (−393,5) + ${x[4]} · (−285,8) = ${fmt(x[3] * -393.5 + x[4] * -285.8, 5)} kJ/mol`, `Edukte: ${fmt(x[2], 5)} + 0 = ${fmt(x[2], 5)} kJ/mol`, `ΔH_R = ${fmt(x[3] * -393.5 + x[4] * -285.8, 5)} − (${fmt(x[2], 5)}) = ${fmt(dH, 5)} kJ/mol`], check: 'kJ/mol; negativ = exotherm',
+      interpretation: x[0] === 'Glukose' ? 'Dieselbe Energie liefert die Zellatmung – nur in vielen kleinen Schritten (Satz von Hess).' : 'Stark exotherm: Verbrennungen setzen viel Wärme frei.', pitfalls: ['Produkte minus Edukte vertauscht.', 'Koeffizienten nicht mit den Bildungsenthalpien multipliziert.'] };
+  } },
+  { id: 'gibbs', subject: 'Chemie', lesson: 'energetik-kinetik', objective: 1, level: 2, title: 'Freie Enthalpie mit ΔG = ΔH − T·ΔS', source: 'zeeck', make: (r) => {
+    const dH = pick(r, [-92, -50, 20, 40, 60]); const dS = pick(r, [-200, -120, 80, 150, 200]); const T = pick(r, [298, 310, 373]);
+    const dG = dH - (T * dS) / 1000;
+    return { context: `Für eine Reaktion gilt ΔH = ${dH} kJ/mol und ΔS = ${dS} J/(mol·K). Berechne ΔG bei ${T} K. Läuft sie freiwillig ab?`, givens: [`ΔH = ${dH} kJ/mol`, `ΔS = ${dS} J/(mol·K) = ${fmt(dS / 1000, 3)} kJ/(mol·K)`, `T = ${T} K`],
+      sought: 'freie Enthalpie ΔG', soughtOptions: ['freie Enthalpie ΔG', 'Reaktionsenthalpie', 'Entropie', 'Gleichgewichtskonstante'],
+      formula: 'ΔG = ΔH − T · ΔS', formulaOptions: ['ΔG = ΔH − T · ΔS', 'ΔG = ΔH + T · ΔS', 'ΔG = T · ΔS − ΔH', 'ΔG = ΔH · ΔS / T'],
+      result: dG, unit: 'kJ/mol', units: U({ 'kj/mol': 1, 'j/mol': 0.001 }), tolerance: { abs: 0.5 },
+      steps: [`T · ΔS = ${T} K · ${fmt(dS / 1000, 3)} kJ/(mol·K) = ${fmt((T * dS) / 1000)} kJ/mol`, `ΔG = ${dH} − (${fmt((T * dS) / 1000)}) = ${fmt(dG)} kJ/mol`], check: 'ΔS zuerst in kJ/(mol·K) umrechnen.',
+      interpretation: dG < 0 ? 'ΔG < 0: Die Reaktion läuft bei dieser Temperatur freiwillig ab (exergon).' : 'ΔG > 0: Die Reaktion läuft bei dieser Temperatur nicht freiwillig ab (endergon).', pitfalls: ['ΔS in J nicht in kJ umgerechnet (Faktor 1000).', 'Temperatur in °C eingesetzt.'] };
+  } },
+  { id: 'halbwertszeit', subject: 'Chemie', lesson: 'energetik-kinetik', objective: 3, level: 2, title: 'Restmenge nach mehreren Halbwertszeiten', source: 'zeeck', make: (r) => {
+    const d = pick(r, [['Ibuprofen', 2, 'h', 400], ['Paracetamol', 2, 'h', 1000], ['Diazepam', 48, 'h', 10], ['Iod-131', 8, 'd', 100]] as [string, number, string, number][]);
+    const nHalf = pick(r, [1, 2, 3, 4, 5, 1.5, 2.5]); const t = d[1] * nHalf; const rest = d[3] * 0.5 ** nHalf;
+    const unit = d[0] === 'Iod-131' ? 'MBq' : 'mg';
+    return { context: `${d[0]} hat eine Halbwertszeit von ${d[1]} ${d[2]} (Abbau 1. Ordnung). Anfangs sind ${d[3]} ${unit} vorhanden. Wie viel ist nach ${fmt(t, 3)} ${d[2]} noch übrig?`, givens: [`t½ = ${d[1]} ${d[2]}`, `Anfangsmenge = ${d[3]} ${unit}`, `t = ${fmt(t, 3)} ${d[2]}`],
+      sought: 'Restmenge', soughtOptions: ['Restmenge', 'Halbwertszeit', 'Geschwindigkeitskonstante', 'abgebaute Menge'],
+      formula: 'Rest = Anfang · (½)^(t / t½)', formulaOptions: ['Rest = Anfang · (½)^(t / t½)', 'Rest = Anfang / (t / t½)', 'Rest = Anfang · t½ / t', 'Rest = Anfang − t / t½'],
+      result: rest, unit, units: unit === 'mg' ? U({ mg: 1, g: 1000, µg: 0.001 }) : U({ mbq: 1, kbq: 0.001, gbq: 1000 }), tolerance: { rel: 0.02 },
+      steps: [`t / t½ = ${fmt(t, 3)} / ${d[1]} = ${fmt(nHalf, 2)} Halbwertszeiten`, `Rest = ${d[3]} · (½)^${fmt(nHalf, 2)} = ${fmt(rest)} ${unit}`], check: `Einheit der Ausgangsmenge (${unit}); der Exponent ist dimensionslos.`,
+      interpretation: `Nach ${fmt(nHalf, 2)} Halbwertszeiten sind noch ${fmt(100 * 0.5 ** nHalf, 3)} % vorhanden.`, pitfalls: ['Linear statt exponentiell gerechnet (nicht nach 2 t½ alles weg).', 'Halbwertszeiten gezählt, aber nicht als Exponent verwendet.'] };
+  } },
+  { id: 'k-aus-thalb', subject: 'Chemie', lesson: 'energetik-kinetik', objective: 3, level: 1, title: 'Geschwindigkeitskonstante aus der Halbwertszeit', source: 'zeeck', make: (r) => {
+    const t = pick(r, [0.5, 2, 4, 6, 8, 12, 24]); const k = Math.LN2 / t;
+    return { context: `Ein Arzneistoff wird nach 1. Ordnung eliminiert, t½ = ${fmt(t, 2)} h. Berechne die Eliminationskonstante k.`, givens: [`t½ = ${fmt(t, 2)} h`, 'ln 2 ≈ 0,693'],
+      sought: 'Geschwindigkeitskonstante k', soughtOptions: ['Geschwindigkeitskonstante k', 'Halbwertszeit', 'Reaktionsordnung', 'Clearance'],
+      formula: 'k = ln 2 / t½', formulaOptions: ['k = ln 2 / t½', 'k = t½ / ln 2', 'k = 1 / (2 · t½)', 'k = ln 2 · t½'],
+      result: k, unit: '1/h', units: U({ '1/h': 1, 'h⁻¹': 1, 'h^-1': 1, '/h': 1, '1/min': 60 }), tolerance: { rel: 0.02 },
+      steps: [`k = 0,693 / ${fmt(t, 2)} h = ${fmt(k)} h⁻¹`], check: 'Einheit: 1/Zeit',
+      interpretation: `Pro Stunde werden etwa ${fmt(100 * (1 - Math.exp(-k)), 2)} % der jeweils vorhandenen Menge abgebaut.`, pitfalls: ['Bruch umgedreht.', 'log statt ln verwendet.'] };
+  } },
+  { id: 'rgt', subject: 'Chemie', lesson: 'energetik-kinetik', objective: 4, level: 1, title: 'RGT-Regel: Beschleunigung durch Temperatur', source: 'zeeck', make: (r) => {
+    const dT = pick(r, [10, 20, 30, -10, -20]); const f = pick(r, [2, 3]); const fac = f ** (dT / 10);
+    return { context: `Eine Reaktion wird pro 10 K Temperaturerhöhung ${f}-mal so schnell. Um welchen Faktor ändert sich ihre Geschwindigkeit, wenn die Temperatur um ${dT} K ${dT > 0 ? 'steigt' : 'sinkt'}?`, givens: [`Faktor pro 10 K: ${f}`, `ΔT = ${dT} K`],
+      sought: 'Geschwindigkeitsfaktor', soughtOptions: ['Geschwindigkeitsfaktor', 'Aktivierungsenergie', 'Halbwertszeit', 'Temperatur'],
+      formula: 'v₂/v₁ = Faktor^(ΔT / 10 K)', formulaOptions: ['v₂/v₁ = Faktor^(ΔT / 10 K)', 'v₂/v₁ = Faktor · ΔT / 10 K', 'v₂/v₁ = ΔT / Faktor', 'v₂/v₁ = Faktor + ΔT / 10 K'],
+      result: fac, unit: '', units: NONE, tolerance: { rel: 0.02 },
+      steps: [`ΔT / 10 K = ${fmt(dT / 10, 2)}`, `v₂/v₁ = ${f}^${fmt(dT / 10, 2)} = ${fmt(fac)}`], check: 'dimensionslos',
+      interpretation: dT > 0 ? 'Schon wenige Grad machen viel aus – Fieber beschleunigt den Stoffwechsel.' : 'Kühlung verlangsamt Reaktionen stark – so schützt man Gewebe und Transplantate.', pitfalls: ['Multipliziert statt potenziert (2 · 3 statt 2³).', 'Bei Abkühlung das negative Vorzeichen im Exponenten übersehen.'] };
+  } },
+  { id: 'pi-aminosaeure', subject: 'Chemie', lesson: 'aminosaeuren-proteine', objective: 1, level: 2, title: 'Isoelektrischer Punkt einer Aminosäure', source: 'zeeck', make: (r) => {
+    const a = pick(r, [['Glycin', [2.34, 9.6], 'neutral'], ['Alanin', [2.34, 9.69], 'neutral'], ['Valin', [2.32, 9.62], 'neutral'], ['Asparaginsäure', [1.88, 3.65, 9.6], 'sauer'], ['Glutaminsäure', [2.19, 4.25, 9.67], 'sauer'], ['Lysin', [2.18, 8.95, 10.53], 'basisch'], ['Histidin', [1.82, 6.0, 9.17], 'basisch']] as [string, number[], string][]);
+    const [name, pk, kind] = a; const pair = kind === 'basisch' ? [pk[1], pk[2]] : [pk[0], pk[1]]; const pI = (pair[0] + pair[1]) / 2;
+    return { context: `Berechne den isoelektrischen Punkt von ${name}. pKs-Werte: ${pk.map((x) => fmt(x, 3)).join(' ; ')}.`, givens: pk.length === 2 ? [`pKs(α-COOH) = ${fmt(pk[0], 3)}`, `pKs(α-NH₃⁺) = ${fmt(pk[1], 3)}`] : [`pKs-Werte: ${pk.map((x) => fmt(x, 3)).join(', ')}`, kind === 'sauer' ? 'saure Seitenkette' : 'basische Seitenkette'],
+      sought: 'isoelektrischer Punkt pI', soughtOptions: ['isoelektrischer Punkt pI', 'pH der Lösung', 'Ladung', 'pKs der Seitenkette'],
+      formula: 'pI = Mittelwert der beiden pKs-Werte, die die neutrale Form einschließen', formulaOptions: ['pI = Mittelwert der beiden pKs-Werte, die die neutrale Form einschließen', 'pI = Mittelwert aller drei pKs-Werte', 'pI = höchster pKs-Wert', 'pI = 7 (immer neutral)'],
+      result: pI, unit: '', units: NONE, tolerance: { abs: 0.03 },
+      steps: [kind === 'neutral' ? 'Keine ionisierbare Seitenkette: beide pKs-Werte mitteln.' : kind === 'sauer' ? 'Saure Seitenkette: die neutrale Form liegt zwischen pKs(α-COOH) und pKs(Seitenkette).' : 'Basische Seitenkette: die neutrale Form liegt zwischen den beiden höheren pKs-Werten.', `pI = (${fmt(pair[0], 3)} + ${fmt(pair[1], 3)}) / 2 = ${fmt(pI, 3)}`], check: 'dimensionslos, zwischen den beiden pKs-Werten',
+      interpretation: pI < 5 ? 'Saure Aminosäure: Der pI liegt im Sauren, bei pH 7 ist sie negativ.' : pI > 7.5 ? 'Basische Aminosäure: Der pI liegt im Basischen, bei pH 7 ist sie positiv.' : 'Bei pH 7 ist sie nahezu ungeladen (Zwitterion).', pitfalls: ['Alle drei pKs-Werte gemittelt.', 'Bei saurer Aminosäure den pKs der Aminogruppe genommen.'] };
+  } },
   // ------------------------------------------------------------------ Physik
   { id: 'geschw', subject: 'Physik', lesson: 'groessen-bewegung', objective: 2, level: 1, title: 'Geschwindigkeit', source: 'harten', make: (r) => {
     const s = num(r, 100, 1500, 50); const t = num(r, 60, 600, 30); const v = s / t;

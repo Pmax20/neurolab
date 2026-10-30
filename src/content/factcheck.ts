@@ -142,6 +142,7 @@ FACTCHECKS.push(
 );
 
 export const REVIEWED_WITHOUT_WEB = [
+  'Chemie allgemein/organisch (Atombau bis Nukleotide): Lehrbuchstandard (Zeeck, Chemie für Mediziner); Standardpotenziale, pK_S-Werte der Aminosäuren, Fettsäure-Schmelzpunkte gerundet; pI, Nernst, Hess, Gibbs, Halbwertszeit und RGT-Vorlagen automatisch nachgerechnet; CIP-Prioritäten und Disaccharid-Verknüpfungen redaktionell abgeglichen – fachliche Freigabe steht aus',
   'Gleichgewicht und Säuren/Basen: MWG, Le Chatelier, K_L-Formeln (AB: L = √K_L, AB₂: L = ∛(K_L/4)), pH-Näherung schwacher Säuren, pK_S + pK_B = 14, Titrationsverbrauch nach Lehrbuchstandard (Zeeck); K_L- und pK_S-Werte gerundet, Literaturwerte schwanken leicht; Titrationskurve und MWG-Tabelle automatisch gegen Referenzpunkte getestet',
   'Anatomie II/III (Nervensystem, Herz, Kreislauf, Rumpfwand, Extremitäten) sowie Blut/Gefäße und Haut/Drüsen: Lehrbuchstandard (Duale Reihe Anatomie, Prometheus, Lüllmann-Rauch), Zahlen wie 31 Spinalnervenpaare, 7/12/5 Wirbel, Rippen 1–7/8–10/11–12, 8 Hand- und 7 Fußwurzelknochen, Leukozytenanteile und Bifurcatio aortae bei L4 redaktionell abgeglichen – fachliche Freigabe steht aus',
   'Rechentrainer: Umrechnungsfaktoren (1 mmHg = 133,322 Pa, 1 cmH₂O = 98,0665 Pa, 1 kcal = 4,184 kJ, 1 kWh = 3,6 MJ, 1 m/s = 3,6 km/h) und alle 38 Vorlagen automatisch mit je 200 Zufallszahlen nachgerechnet',

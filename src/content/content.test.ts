@@ -351,3 +351,11 @@ describe('Kohlenwasserstoffe', () => {
     }
   });
 });
+
+describe('Chemie 1. Semester vollständig', () => {
+  test('jedes Lernziel jeder Chemie-Lektion hat mindestens eine Aufgabe', () => {
+    const missing: string[] = [];
+    for (const id of moduleById('molecule')!.lessons) { const l = lessonById2(id)!; for (const o of l.objectives) if (!TASKS.some((t) => t.objective === o && t.lessons.includes(id))) missing.push(`${id}: ${o}`); }
+    expect(missing).toEqual([]);
+  });
+});

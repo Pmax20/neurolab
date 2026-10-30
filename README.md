@@ -94,3 +94,13 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   Hybridisierung, Nomenklatur, Isomerie, Eigenschaften, radikalische Substitution, elektrophile Addition, Verbrennung, biologische Bezüge.
 - Ansicht `hydrocarbons` (`src/pages/views/chem4Views.tsx`): Vergleich sp³/sp²/sp, Benennungstrainer mit 14 Gerüstformeln, homologe Reihe
   mit Siedetemperaturen, Mechanismen Schritt für Schritt. 24 Aufgaben (`tasks8.ts`) und 2 Rechenvorlagen.
+
+## Chemie 1. Semester vollständig (Stand 30.10.2026)
+
+- `src/content/chem5.ts`: Atombau, Periodensystem, Bindungen, Konzentrationen, Redox und Komplexe ausgebaut (bisherige Lernziele
+  wörtlich erhalten); neue Lektion `energetik-kinetik` (Enthalpie, Hess, Gibbs-Energie, Reaktionsordnung, Halbwertszeit, Arrhenius/RGT).
+  Ansichten `redox2`, `complexes`, `energetics` (`chem5Views.tsx`), Aufgaben in `tasks9.ts`, 11 Rechenvorlagen.
+- `src/content/chem6.ts`: Organik um Reaktionstypen erweitert; neue Lektionen Alkohole/Amine, Carbonyle, Carbonsäuren und Derivate,
+  Stereochemie, Aromaten/Heterocyclen, Kohlenhydrate, Lipide, Aminosäuren/Proteine, Nukleotide. Gemeinsame Ansicht `organic`
+  (`chem6Views.tsx`) mit Quiz und Tabellen je Lektion, pI-Rechner; 58 Aufgaben in `tasks10.ts`, Rechenvorlage `pi-aminosaeure`.
+- Test: Jedes Lernziel jeder Chemie-Lektion hat mindestens eine Aufgabe.

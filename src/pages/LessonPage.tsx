@@ -15,13 +15,15 @@ import * as AN from './views/anatomyViews';
 import * as AN2 from './views/anatomy2Views';
 import * as CH3 from './views/chem3Views';
 import * as CH4 from './views/chem4Views';
+import * as CH5 from './views/chem5Views';
+import * as CH6 from './views/chem6Views';
 import * as K2 from './views/semester2Views';
 import { relevanceOf } from '../content/curriculum';
 
 const VIEWS: Record<string, (l: Lesson) => ReactNode> = {
   motion: () => <K2.MotionView />, work: () => <K2.WorkView />, pressure: () => <K2.PressureView />, periodic: () => <K2.PeriodicView />, balance: () => <K2.BalanceView />, microscopy: () => <K2.MicroscopyView />,
   orientation: () => <AN.OrientationView />, embryo: () => <AN.EmbryoView />, bone: () => <AN.BoneView />, joints: () => <AN.JointsView />, 'muscle-anatomy': () => <AN.MuscleAnatomyView />,
-  equilibrium: () => <CH3.EquilibriumView />, acidbase2: () => <CH3.AcidBase2View />, hydrocarbons: () => <CH4.HydrocarbonsView />,
+  equilibrium: () => <CH3.EquilibriumView />, acidbase2: () => <CH3.AcidBase2View />, hydrocarbons: () => <CH4.HydrocarbonsView />, redox2: () => <CH5.Redox2View />, complexes: () => <CH5.ComplexesView />, energetics: () => <CH5.EnergeticsView />, organic: (l) => <CH6.OrganicView key={l.id} lesson={l.id} />,
   spinal: () => <AN2.SpinalView />, heart: () => <AN2.HeartView />, vessels: () => <AN2.VesselsView />, trunkwall: () => <AN2.TrunkWallView />, upperlimb: () => <AN2.UpperLimbView />, lowerlimb: () => <AN2.LowerLimbView />,
   sim: (l) => <K.SimView models={l.models} />, cellcycle: () => <K.CellCycleView />, genetics: () => <K.GeneticsView />, tissue: (l) => <K.TissueView ids={l.structures} />, terms: (l) => <K.TermView lesson={l.id} />,
   neuron: () => <N.NeuronView />, membrane: () => <N.MembraneView />, ions: () => <N.IonsView />, rmp: () => <N.RmpView />, ap: () => <N.APView />,
