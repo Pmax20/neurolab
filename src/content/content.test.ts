@@ -380,3 +380,16 @@ describe("1. Semester vollständig", () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe('Chemie-Testat 1 (Skript Kap. 1–6)', () => {
+  test('alle Testat-Lektionen existieren, gehören zur Chemie und jedes Lernziel hat eine Aufgabe', async () => {
+    const { TESTATE, testatLessons } = await import('./chem7');
+    const { lessonById: byId, TASKS: all, moduleById: mod } = await import('./index');
+    for (const t of TESTATE) for (const id of testatLessons(t)) {
+      const l = byId(id);
+      expect(l, id).toBeTruthy();
+      expect(mod('molecule')!.lessons, id).toContain(id);
+      for (const o of l!.objectives) expect(all.some((x) => x.objective === o && x.lessons.includes(id)), `${id}: ${o}`).toBe(true);
+    }
+  });
+});

@@ -123,3 +123,15 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
 - 24 neue Rechenvorlagen (Biologie und Physik) in `calc.ts`.
 - Test: Jedes Lernziel jeder Lektion aller Fächer des 1. Semesters hat mindestens eine Aufgabe; Verweise und Übungsdaten
   werden auf Konsistenz geprüft.
+
+## Chemie-Testat 1: Skript Kapitel 1–6 (Stand 10.11.2026)
+
+- Kapitelgliederung aus Kims Skript „Chemie für Mediziner“ (Inhaltsverzeichnis): 1 Atombau, 2 Die chemische Bindung, 3 Thermodynamik,
+  4 Kinetik und Katalyse, 5 Luft, 6 Wasser.
+- Neue Lektion `luft-wasser` (`src/content/chem7.ts`): Zusammensetzung der Luft, Dalton, Henry, ideales Gasgesetz, molares Volumen,
+  Anomalie des Wassers, Zustandsdiagramm (Tripelpunkt, kritischer Punkt, negative Schmelzkurve), Elektrolyse; Quiz (16 Fragen) und Übersichtstabellen.
+- `TESTATE` in `chem7.ts`: ordnet die Skriptkapitel den NeuroLab-Lektionen zu. Auf der Startseite (1. Semester) erscheint eine Karte
+  „Chemie-Testat 1“ mit Fortschritt, „Üben“ und „Testat simulieren“; unter Üben → Thema → „Testate“ lässt sich das Testat wählen
+  (`#/pruefung?testat=chem1`, mit `&modus=pruefen` direkt im Prüfmodus).
+- `src/content/tasks14.ts`: 20 Aufgaben zu Luft, Gasen und Wasser sowie 6 Tafel- und Verständnisaufgaben zu Atombau, Bindung,
+  Thermodynamik und Kinetik. Test: Alle Testat-Lektionen existieren und jedes ihrer Lernziele hat eine Aufgabe.

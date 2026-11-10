@@ -7,6 +7,7 @@ import { ERROR_LABEL } from '../content/types';
 import { href } from '../ui/router';
 import { StatusBadge } from '../ui/common';
 import { relevanceOf, lessonsInWindow } from '../content/curriculum';
+import { TESTATE, testatLessons } from '../content/chem7';
 import { learningPath, modulesBySemester, upcomingExams, daysUntil, countdownText, ExamDates } from '../ui/semester';
 
 export const MOD_ICON: Record<string, string> = { neuro: '⚡', cell: '◉', molecule: '⌬', physio: '♥', physics: '◎', histo: '⬡', term: 'Aa', anatomy: '🦴' };
@@ -88,6 +89,7 @@ export function Dashboard({ onTour }: { onTour?: () => void }) {
         </details>
       </section>
       <ThisWeek />
+      {sem === 1 && <TestatCard />}
       {first && onTour && (
         <div className="hint-card" style={{ marginBottom: 22 }}>
           <div><b>Neu hier?</b> Die Tour zeigt dir in einer Minute, wie Lektionen, Simulationen und Übungen funktionieren.</div>
@@ -285,5 +287,34 @@ export function ModelLibrary() {
         </details>
       ))}
     </div>
+  );
+}
+
+function TestatCard() {
+  const s = useStore((x) => x);
+  return (
+    <>
+      {TESTATE.map((t) => {
+        const ls = testatLessons(t);
+        const done = ls.filter((l) => s.lessons[l]?.completed).length;
+        const next = ls.find((l) => !s.lessons[l]?.completed);
+        return (
+          <section key={t.id} className="card" style={{ marginBottom: 22 }} aria-labelledby={`testat-${t.id}`}>
+            <div className="row between" style={{ alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <h3 id={`testat-${t.id}`} style={{ margin: '0 0 4px' }}>{t.title}</h3>
+                <div className="muted" style={{ fontSize: '0.9rem' }}>{t.subtitle}</div>
+                <div className="progressline" style={{ margin: '8px 0 0' }}><span className="muted" style={{ fontSize: '0.88rem' }}>{done} von {ls.length} Lektionen</span><div className="meter"><div style={{ width: `${(done / ls.length) * 100}%` }} /></div></div>
+              </div>
+              <div className="row">
+                {next && <a className="btn" href={href('lektion', next)}>Nächste Lektion</a>}
+                <a className="btn" href={`#/pruefung?testat=${t.id}`}>Üben</a>
+                <a className="btn primary" href={`#/pruefung?testat=${t.id}&modus=pruefen`}>Testat simulieren</a>
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </>
   );
 }

@@ -10,6 +10,7 @@ import { TaskView } from './TaskView';
 import { href } from '../ui/router';
 import { download } from '../ui/common';
 import { exportData, deleteAll } from '../store/store';
+import { TESTATE, testatById, testatLessons } from '../content/chem7';
 
 type Path = 'verstehen' | 'ueben' | 'pruefen' | 'wiederholen' | 'frei' | 'karten' | 'rechnen' | 'histo';
 
@@ -23,6 +24,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
   const s = useStore((x) => x);
   const preLesson = query.get('lektion');
   const preModule = query.get('modul');
+  const preTestat = testatById(query.get('testat') ?? '');
   const qm = query.get('modus');
   const [path, setPath] = useState<Path>((['wiederholen', 'karten', 'rechnen', 'histo', 'pruefen'] as const).find((x) => x === qm) ?? 'ueben');
   const [histoTab, setHistoTab] = useState<'sim' | 'eigene'>('sim');
@@ -30,7 +32,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [cardQueue, setCardQueue] = useState<string[] | null>(null);
-  const [lessons, setLessons] = useState<string[]>(preLesson ? [preLesson] : preModule ? [...(MODULES.find((m) => m.id === preModule)?.lessons ?? [])] : []);
+  const [lessons, setLessons] = useState<string[]>(preTestat ? testatLessons(preTestat) : preLesson ? [preLesson] : preModule ? [...(MODULES.find((m) => m.id === preModule)?.lessons ?? [])] : []);
   const [levels, setLevels] = useState<TaskLevel[]>([]);
   const [queue, setQueue] = useState<string[] | null>(null);
   const [idx, setIdx] = useState(0);
@@ -122,11 +124,14 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
     );
   }
 
-  const topicValue = lessons.length === 0 ? '' : lessons.length === 1 ? 'l:' + lessons[0] : MODULES.find((m) => m.lessons.length === lessons.length && m.lessons.every((l) => lessons.includes(l))) ? 'm:' + MODULES.find((m) => m.lessons.length === lessons.length && m.lessons.every((l) => lessons.includes(l)))!.id : 'custom';
+  const sameSet = (a: string[], b: string[]) => a.length === b.length && a.every((x) => b.includes(x));
+  const testat = TESTATE.find((t) => sameSet(testatLessons(t), lessons));
+  const topicValue = testat ? 't:' + testat.id : lessons.length === 0 ? '' : lessons.length === 1 ? 'l:' + lessons[0] : MODULES.find((m) => m.lessons.length === lessons.length && m.lessons.every((l) => lessons.includes(l))) ? 'm:' + MODULES.find((m) => m.lessons.length === lessons.length && m.lessons.every((l) => lessons.includes(l)))!.id : 'custom';
   const setTopic = (v: string) => {
     if (!v) setLessons([]);
     else if (v.startsWith('m:')) setLessons([...(MODULES.find((m) => m.id === v.slice(2))?.lessons ?? [])]);
     else if (v.startsWith('l:')) setLessons([v.slice(2)]);
+    else if (v.startsWith('t:')) { const t = testatById(v.slice(2)); if (t) setLessons(testatLessons(t)); }
   };
   const count = path === 'pruefen' || path === 'rechnen' ? Math.min(10, pool.length) : path === 'ueben' ? Math.min(12, pool.length) : path === 'histo' ? Math.min(8, pool.length) : pool.length;
   return (
@@ -161,6 +166,9 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
             <span className="lab"><b>Thema</b></span>
             <select value={topicValue} onChange={(e) => setTopic(e.target.value)}>
               <option value="">Alle Themen</option>
+              <optgroup label="Testate">
+                {TESTATE.map((t) => <option key={t.id} value={'t:' + t.id}>{t.title} ({t.subtitle.split(':')[0]})</option>)}
+              </optgroup>
               {topicValue === 'custom' && <option value="custom">Eigene Auswahl ({lessons.length} Lektionen)</option>}
               {MODULES.map((m) => (
                 <optgroup key={m.id} label={m.title}>
@@ -170,6 +178,17 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
               ))}
             </select>
           </label>
+          {testat && (
+            <div className="notice info" style={{ margin: '4px 0 10px' }}>
+              <b>{testat.title}</b> – {testat.subtitle}. Diese Lektionen gehören dazu:
+              <ul style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+                {testat.chapters.map((c) => (
+                  <li key={c.kap}><b>Kap. {c.kap}</b>: {c.lessons.map((l, i) => <span key={l}>{i > 0 && ', '}<a href={href('lektion', l)}>{lessonById(l)?.title}</a></span>)}</li>
+                ))}
+              </ul>
+              <div className="muted" style={{ fontSize: '0.85rem', marginTop: 6 }}>Tipp fürs Testat: „Prüfen“ wählen und die Antworten zuerst laut erklären, wie an der Tafel.</div>
+            </div>
+          )}
           <details>
             <summary>Mehrere Themen oder Niveau wählen{levels.length ? ` · ${levels.length} Niveau${levels.length > 1 ? 's' : ''}` : ''}</summary>
             <div className="check-group">
