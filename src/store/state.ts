@@ -82,7 +82,7 @@ export interface SrsEntry { box: number; due: number; lapses?: number; /** zulet
 
 export interface AppState {
   version: number;
-  settings: { reducedMotion: 'system' | 'an' | 'aus'; showAdvanced: boolean; textScale: number; reviewerName: string; tourDone: boolean; hints: Record<string, boolean>; name: string; semester: number; exams: ExamDate[] };
+  settings: { reducedMotion: 'system' | 'an' | 'aus'; showAdvanced: boolean; textScale: number; reviewerName: string; tourDone: boolean; hints: Record<string, boolean>; name: string; semester: number; exams: ExamDate[]; focus: string; expert: boolean };
   lessons: Record<string, { levels: number[]; completed: boolean; last: number }>;
   sims: Record<string, { runs: number; last: number }>;
   attempts: Attempt[];
@@ -102,7 +102,7 @@ export interface AppState {
 export function emptyState(): AppState {
   return {
     version: SCHEMA_VERSION,
-    settings: { reducedMotion: 'system', showAdvanced: false, textScale: 1, reviewerName: '', tourDone: false, hints: {}, name: 'Kim', semester: 1, exams: [] },
+    settings: { reducedMotion: 'system', showAdvanced: false, textScale: 1, reviewerName: '', tourDone: false, hints: {}, name: 'Kim', semester: 1, exams: [], focus: '', expert: false },
     lessons: {},
     sims: {},
     attempts: [],
@@ -130,6 +130,8 @@ export function sanitize(raw: unknown): { state: AppState; dropped: string[] } {
   if (isObj(raw.settings)) {
     s.settings = { ...base.settings, ...raw.settings };
     if (typeof s.settings.name !== 'string') s.settings.name = base.settings.name;
+    if (typeof s.settings.focus !== 'string') s.settings.focus = '';
+    s.settings.expert = s.settings.expert === true;
     const sem = Number(s.settings.semester);
     s.settings.semester = Number.isInteger(sem) && sem >= 1 && sem <= 12 ? sem : 1;
     s.settings.exams = Array.isArray(raw.settings.exams)

@@ -30,13 +30,16 @@ class Boundary extends Component<{ children: ReactNode; resetKey: string }, { er
 // Hauptbereiche (auch die mobile Tab-Leiste) und seltener genutzte Bereiche unter „Mehr“
 const MAIN: { to: string; label: string; ico: string; match: string[] }[] = [
   { to: '', label: 'Start', ico: '⌂', match: [''] },
-  { to: 'bibliothek', label: 'Lernen', ico: '▤', match: ['bibliothek', 'modul', 'lektion'] },
-  { to: 'experimente', label: 'Experimente', ico: '⚗', match: ['experimente', 'sim'] },
+  { to: 'bibliothek', label: 'Lernen', ico: '▤', match: ['bibliothek', 'modul', 'lektion', 'suche', 'experimente', 'sim'] },
   { to: 'pruefung', label: 'Üben', ico: '✎', match: ['pruefung'] },
-  { to: 'analyse', label: 'Fortschritt', ico: '◔', match: ['analyse'] },
+  { to: 'analyse', label: 'Fortschritt', ico: '★', match: ['analyse'] },
 ];
 const MORE: [string, string][] = [
-  ['lernpfade', 'Lernpfade'], ['import', 'Vorlesung importieren'], ['modelle', 'Modellbibliothek'], ['pruefbericht', 'Prüfbericht'], ['freigabe', 'Fachliche Freigabe'], ['quellen', 'Quellen'], ['einstellungen', 'Einstellungen'],
+  ['experimente', 'Experimente und Simulationen'], ['lernpfade', 'Lernpfade'], ['import', 'Vorlesung importieren'], ['einstellungen', 'Einstellungen'],
+];
+// nur in der Entwickleransicht (Einstellungen → Darstellung)
+const EXPERT: [string, string][] = [
+  ['modelle', 'Modellbibliothek'], ['pruefbericht', 'Prüfbericht'], ['freigabe', 'Fachliche Freigabe'], ['quellen', 'Quellen'],
 ];
 
 function Logo() {
@@ -55,6 +58,7 @@ export function App() {
   const textScale = useStore((s) => s.settings.textScale);
   const reduced = useStore((s) => s.settings.reducedMotion);
   const tourDone = useStore((s) => s.settings.tourDone);
+  const expert = useStore((s) => s.settings.expert);
   const [tour, setTour] = useState(false);
   const [issues, setIssues] = useState(getLoadIssues());
   useEffect(() => { document.documentElement.style.setProperty('--text-scale', String(textScale)); }, [textScale]);
@@ -75,6 +79,7 @@ export function App() {
   switch (cur) {
     case '': page = <Dashboard onTour={() => setTour(true)} />; break;
     case 'bibliothek': page = <Library />; break;
+    case 'suche': page = <Library key={'suche' + query.get('q')} search initial={query.get('q') ?? ''} />; break;
     case 'modul': page = <ModulePage id={path[1]} />; break;
     case 'lektion': page = <LessonPage key={path[1]} id={path[1]} />; break;
     case 'sim': page = <SimPage id={path[1]} />; break;
@@ -91,7 +96,8 @@ export function App() {
     default: page = <div className="notice danger">Diese Seite gibt es nicht. <a href="#/">Zur Startseite</a></div>;
   }
   const isMain = (m: (typeof MAIN)[number]) => m.match.includes(cur);
-  const inMore = MORE.some(([t]) => t === cur);
+  const more = expert ? [...MORE, ...EXPERT] : MORE;
+  const inMore = more.some(([t]) => t === cur);
   return (
     <div className="app">
       <a href="#main" className="sr-only">Zum Inhalt springen</a>
@@ -100,14 +106,15 @@ export function App() {
         <a href="#/" className="brand"><Logo /> NeuroLab</a>
         <span className="spacer" />
         <CloudBadge />
-        <button className="small" onClick={() => setTour(true)} aria-label="Hilfe: Tutorial starten">? Hilfe</button>
+        <a className="btn small search-btn" href="#/suche" aria-label="Suchen">⌕ Suchen</a>
       </header>
       <nav id="nav" className={`nav ${navOpen ? 'open' : ''}`} aria-label="Hauptnavigation">
         {MAIN.map((m) => <a key={m.label} href={`#/${m.to}`} aria-current={isMain(m) ? 'page' : undefined}><span className="ico" aria-hidden="true">{m.ico}</span>{m.label}</a>)}
         <details className="more" open={inMore || undefined}>
           <summary><span className="ico chev" aria-hidden="true">›</span>Mehr</summary>
-          {MORE.map(([t, l]) => <a key={t} href={`#/${t}`} aria-current={cur === t ? 'page' : undefined}>{l}</a>)}
+          {more.map(([t, l]) => <a key={t} href={`#/${t}`} aria-current={cur === t ? 'page' : undefined}>{l}</a>)}
         </details>
+        <button className="nav-help" onClick={() => { setNavOpen(false); setTour(true); }}><span className="ico" aria-hidden="true">?</span>Hilfe und Tour</button>
         {!tourDone && (
           <div className="help-card">
             Neu hier? Die Tour erklärt dir die App in einer Minute.

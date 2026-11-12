@@ -82,6 +82,35 @@ export function RelevanceChip({ lesson, semesters }: { lesson: string; semesters
   );
 }
 
+const ABBR = /(?:^|[\s(])(?:z|B|ca|bzw|d|h|u|a|vgl|etc|Abb|Nr|s|o|ggf|evtl|bspw|inkl|max|min|sog|v|Chr|Kap|S|N|M|A|Lig|[A-Z])\.$|\d\.$/;
+/** Kernaussage eines Textes: erster Satz (bei sehr kurzen Sätzen auch der zweite). Abkürzungen wie „z. B.“, „ca.“ oder Ordnungszahlen beenden keinen Satz. */
+export function firstSentence(t: string) {
+  const re = /[.!?](?=\s+[A-ZÄÖÜ„(0-9])/g;
+  let m: RegExpExecArray | null;
+  let cut = -1, parts = 0;
+  while ((m = re.exec(t))) {
+    const head = t.slice(0, m.index + 1);
+    if (ABBR.test(head)) continue;
+    cut = m.index + 1;
+    parts++;
+    if (head.length >= 30 || parts >= 2) break;
+  }
+  return (cut > 0 && cut >= 30 ? t.slice(0, cut) : cut > 0 && parts >= 2 ? t.slice(0, cut) : t).replace(/\s+/g, ' ');
+}
+
+/** „Das Wichtigste in 1 Minute“: Kernsätze aus den Mechanismusschritten, zum schnellen Wiederholen vor dem Testat. */
+function QuickRecap({ lesson: l }: { lesson: Lesson }) {
+  const points = l.mechanism.slice(0, 6);
+  return (
+    <details className="card fold quick-recap" open>
+      <summary>Das Wichtigste in 1 Minute</summary>
+      <ul>{points.map((m) => <li key={m.title}><b>{m.title}:</b> {firstSentence(m.text)}</li>)}</ul>
+      {l.depth.pitfalls?.[0] && <p style={{ margin: '8px 0 0' }}><b>Typische Falle:</b> {l.depth.pitfalls[0]}</p>}
+      {l.mechanism.length > points.length && <p className="muted" style={{ margin: '6px 0 0', fontSize: '0.88rem' }}>+ {l.mechanism.length - points.length} weitere Schritte unter „Mechanismus“.</p>}
+    </details>
+  );
+}
+
 const DIFF = { grundlagen: 'Grundlagen', vertiefung: 'Vertiefung', anwendung: 'Anwendung' } as const;
 
 export function LessonPage({ id }: { id: string }) {
@@ -91,6 +120,7 @@ export function LessonPage({ id }: { id: string }) {
   const note = useStore((s) => s.notes[id] ?? '');
   const prog = useStore((s) => s.lessons[id]);
   const state = useStore((s) => s);
+  const expert = state.settings.expert;
   const steps = l ? [
     { key: 'ueberblick', label: 'Überblick' },
     { key: 'mechanismus', label: 'Mechanismus' },
@@ -164,8 +194,8 @@ export function LessonPage({ id }: { id: string }) {
       </div>
       <div className="row" style={{ marginBottom: 10 }}>
         <span className="badge">{DIFF[l.difficulty]}</span>
-        {mod && <RelevanceChip lesson={l.id} semesters={mod.semesters} />}
-        <StatusChip id={`lesson:${l.id}`} status={l.status} />
+        {mod && (expert || relevanceOf(l.id, mod.semesters).kind === 'belegt') && <RelevanceChip lesson={l.id} semesters={mod.semesters} />}
+        {expert && <StatusChip id={`lesson:${l.id}`} status={l.status} />}
       </div>
       <nav className="lesson-steps" aria-label="Schritte der Lektion">
         {steps.map((st, i) => (
@@ -179,7 +209,8 @@ export function LessonPage({ id }: { id: string }) {
           {cur === 'ueberblick' && (
             <div>
               <p className="lead">{l.overview}</p>
-              <p className="muted">Darum geht es in dieser Lektion: {l.objectives.length} Lernziele, {l.mechanism.length} Mechanismusschritte{l.view ? ', eine interaktive Untersuchung' : ''} und {tasks.length} Aufgaben.</p>
+              <QuickRecap lesson={l} />
+              <p className="muted">Ausführlich: {l.mechanism.length} Schritte unter „Mechanismus“{l.view || TOPIC_EXTRAS[l.id] ? ', zum Ausprobieren eine interaktive Untersuchung' : ''} und {tasks.length} Aufgaben unter „Üben“.</p>
             </div>
           )}
           {cur === 'mechanismus' && <ol className="steps">{l.mechanism.map((m) => <li key={m.title}><b>{m.title}.</b> {m.text}</li>)}</ol>}

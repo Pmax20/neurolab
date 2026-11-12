@@ -13,6 +13,8 @@ export function useEffectiveStatus(id: string, base: ReviewStatus): ReviewStatus
 export function StatusBadge({ id, status }: { id: string; status: ReviewStatus }) {
   const st = useEffectiveStatus(id, status);
   const rec = useStore((s) => s.reviews[id]);
+  const expert = useStore((s) => s.settings.expert);
+  if (!expert) return null;
   const cls = st === 'freigegeben' || st === 'geprueft' ? 'ok' : st === 'ueberarbeiten' ? 'danger' : 'warn';
   return (
     <span className={`badge ${cls}`} title={rec ? `${STATUS_LABEL[st]} – ${rec.reviewer || 'ohne Namen'}, ${new Date(rec.date).toLocaleDateString('de-DE')}${rec.note ? `: ${rec.note}` : ''}` : 'Noch keine fachliche Prüfung durch eine Fachperson erfasst.'}>
@@ -27,7 +29,8 @@ export function OriginBadge({ origin }: { origin: Origin }) {
 
 export function UnreviewedNotice({ id, status, what = 'Dieser Inhalt' }: { id: string; status: ReviewStatus; what?: string }) {
   const st = useEffectiveStatus(id, status);
-  if (st === 'freigegeben' || st === 'geprueft') return null;
+  const expert = useStore((x) => x.settings.expert);
+  if (st === 'freigegeben' || st === 'geprueft' || !expert) return null;
   return (
     <div className="notice" role="note">
       <b>Noch nicht fachlich freigegeben.</b> {what} wurde KI-gestützt anhand der angegebenen Quellen erstellt und automatisiert getestet, aber noch nicht von einer fachkundigen Person geprüft. Bei Abweichungen zu Vorlesung oder Lehrbuch gilt die Vorlesung. <a href="#/freigabe">Zur fachlichen Prüfung</a>

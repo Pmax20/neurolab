@@ -321,6 +321,8 @@ export function SettingsPage({ onTour }: { onTour?: () => void }) {
         </div>
         <div className="field"><span className="lab"><b>Textgröße</b><span>{Math.round(st.textScale * 100)} %</span></span><input type="range" min={0.85} max={1.4} step={0.05} value={st.textScale} onChange={(e) => set('textScale', Number(e.target.value))} aria-label="Textgröße" /></div>
         <label className="row"><input type="checkbox" checked={st.showAdvanced} onChange={(e) => set('showAdvanced', e.target.checked)} /> Erweiterte Simulationsparameter standardmäßig anzeigen</label>
+        <label className="row" style={{ marginTop: 8 }}><input type="checkbox" checked={st.expert} onChange={(e) => set('expert', e.target.checked)} /> Entwickleransicht: Prüfstatus, Quellenbelege und Verwaltungsseiten (Prüfbericht, Freigabe, Quellen, Modellbibliothek) anzeigen</label>
+        <span className="hint">Für den normalen Lernalltag ausgeschaltet lassen – dann bleibt NeuroLab übersichtlicher. Inhaltlich ändert sich nichts.</span>
       </section>
       <section className="card">
         <h3>Daten</h3>

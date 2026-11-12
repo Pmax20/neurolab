@@ -135,3 +135,16 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
   (`#/pruefung?testat=chem1`, mit `&modus=pruefen` direkt im Prüfmodus).
 - `src/content/tasks14.ts`: 20 Aufgaben zu Luft, Gasen und Wasser sowie 6 Tafel- und Verständnisaufgaben zu Atombau, Bindung,
   Thermodynamik und Kinetik. Test: Alle Testat-Lektionen existieren und jedes ihrer Lernziele hat eine Aufgabe.
+
+## Übersichtlichkeit (Stand 12.11.2026)
+
+- **Startseite:** Fokus-Leiste (ein Fach wählen oder alle), darunter „Heute“: Weiterlernen, nächstes Testat bzw. eingetragene Klausur mit
+  Countdown, fällige Wiederholungen und ein unsicheres Thema. Stundenplan und Termine sind einklappbar, die Statistik steht als eine Zeile unten.
+- **Fokus-Fach** (`settings.focus`): Startseite, „Lernen“ und „Üben“ zeigen zuerst dieses Fach.
+- **Navigation:** vier Bereiche (Start, Lernen, Üben, Fortschritt); Experimente unter „Lernen“ und im Menü; Suche oben rechts (`#/suche`);
+  „Hilfe und Tour“ im Menü.
+- **Übungsseite:** drei Hauptarten (Üben, Wiederholen, Prüfen), Verstehen/Karteikarten/Rechnen/Histologie unter „Mehr Übungsarten“.
+- **Lektionen:** „Das Wichtigste in 1 Minute“ im Überblick (Kernsatz je Mechanismusschritt + typische Falle).
+- **Entwickleransicht** (`settings.expert`, Einstellungen → Darstellung): Prüfstatus-Schilder, Hinweise „noch nicht fachlich freigegeben“
+  und die Verwaltungsseiten (Prüfbericht, Freigabe, Quellen, Modellbibliothek) erscheinen nur dort. Ein Hinweis zur KI-Erstellung steht
+  dauerhaft am Ende der Startseite.

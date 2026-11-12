@@ -14,6 +14,18 @@ import { TESTATE, testatById, testatLessons } from '../content/chem7';
 
 type Path = 'verstehen' | 'ueben' | 'pruefen' | 'wiederholen' | 'frei' | 'karten' | 'rechnen' | 'histo';
 
+const MAIN_MODES = [
+  ['ueben', 'Üben', 'Unsichere Themen zuerst'],
+  ['wiederholen', 'Wiederholen', 'Was heute fällig ist'],
+  ['pruefen', 'Prüfen', '10 Fragen ohne Hilfe – wie im Testat'],
+] as const;
+const MORE_MODES = [
+  ['verstehen', 'Verstehen', 'Aufgaben mit kurzer Erklärung'],
+  ['karten', 'Karteikarten', 'Begriffe und Strukturen'],
+  ['rechnen', 'Rechnen', 'Rechentrainer mit Einheiten'],
+  ['histo', 'Histologie', 'Präparate bestimmen'],
+] as const;
+
 function shuffle<T>(a: T[]) {
   const x = [...a];
   for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; }
@@ -32,7 +44,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [cardQueue, setCardQueue] = useState<string[] | null>(null);
-  const [lessons, setLessons] = useState<string[]>(preTestat ? testatLessons(preTestat) : preLesson ? [preLesson] : preModule ? [...(MODULES.find((m) => m.id === preModule)?.lessons ?? [])] : []);
+  const [lessons, setLessons] = useState<string[]>(preTestat ? testatLessons(preTestat) : preLesson ? [preLesson] : preModule ? [...(MODULES.find((m) => m.id === preModule)?.lessons ?? [])] : qm === 'wiederholen' ? [] : [...(MODULES.find((m) => m.id === s.settings.focus)?.lessons ?? [])]);
   const [levels, setLevels] = useState<TaskLevel[]>([]);
   const [queue, setQueue] = useState<string[] | null>(null);
   const [idx, setIdx] = useState(0);
@@ -133,25 +145,28 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
     else if (v.startsWith('l:')) setLessons([v.slice(2)]);
     else if (v.startsWith('t:')) { const t = testatById(v.slice(2)); if (t) setLessons(testatLessons(t)); }
   };
+  const sortedModules = [...MODULES].sort((a, b) => Number(b.semesters.includes(s.settings.semester)) - Number(a.semesters.includes(s.settings.semester)));
   const count = path === 'pruefen' || path === 'rechnen' ? Math.min(10, pool.length) : path === 'ueben' ? Math.min(12, pool.length) : path === 'histo' ? Math.min(8, pool.length) : pool.length;
   return (
     <div className="stack" style={{ maxWidth: 820 }}>
       <div className="page-head"><div><h1>Üben</h1><p className="muted" style={{ margin: 0 }}>Wähle, wie du üben möchtest – den Rest erledigt NeuroLab.</p></div></div>
-      <div className="mode-pick" role="radiogroup" aria-label="Lernpfad">
-        {([
-          ['ueben', 'Üben', 'Unsichere Themen zuerst'],
-          ['verstehen', 'Verstehen', 'Mit kurzer Erklärung'],
-          ['pruefen', 'Prüfen', '10 Fragen, ohne Hilfe'],
-          ['wiederholen', `Wiederholen (${due.length})`, 'Was heute fällig ist'],
-          ['karten', 'Karteikarten', 'Begriffe und Strukturen'],
-          ['rechnen', 'Rechnen', 'Rechentrainer mit Einheiten'],
-          ['histo', 'Histologie', 'Präparate bestimmen'],
-        ] as const).map(([k, t, d]) => (
+      <div className="mode-pick main-modes" role="radiogroup" aria-label="Lernpfad">
+        {MAIN_MODES.map(([k, t, d]) => (
           <button key={k} role="radio" aria-checked={path === k} onClick={() => setPath(k)}>
-            <b>{t}</b><span>{d}</span>
+            <b>{t}</b><span>{k === 'wiederholen' ? (due.length ? `${due.length} heute fällig` : 'Heute nichts fällig') : d}</span>
           </button>
         ))}
       </div>
+      <details className="more-modes" open={MORE_MODES.some(([k]) => k === path) || undefined}>
+        <summary>Mehr Übungsarten{MORE_MODES.some(([k]) => k === path) ? `: ${MORE_MODES.find(([k]) => k === path)![1]}` : ''}</summary>
+        <div className="mode-pick small-modes" role="radiogroup" aria-label="Weitere Übungsarten">
+          {MORE_MODES.map(([k, t, d]) => (
+            <button key={k} role="radio" aria-checked={path === k} onClick={() => setPath(k)}>
+              <b>{t}</b><span>{d}</span>
+            </button>
+          ))}
+        </div>
+      </details>
       {path === 'histo' && (
         <div className="seg" role="tablist" aria-label="Histologie">
           <button role="tab" aria-selected={histoTab === 'sim'} onClick={() => setHistoTab('sim')}>Prüfungssimulator</button>
@@ -170,8 +185,8 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
                 {TESTATE.map((t) => <option key={t.id} value={'t:' + t.id}>{t.title} ({t.subtitle.split(':')[0]})</option>)}
               </optgroup>
               {topicValue === 'custom' && <option value="custom">Eigene Auswahl ({lessons.length} Lektionen)</option>}
-              {MODULES.map((m) => (
-                <optgroup key={m.id} label={m.title}>
+              {sortedModules.map((m) => (
+                <optgroup key={m.id} label={m.semesters.includes(s.settings.semester) ? m.title : `${m.title} (anderes Semester)`}>
                   <option value={'m:' + m.id}>Ganzes Modul: {m.title}</option>
                   {m.lessons.map((l) => <option key={l} value={'l:' + l}>{lessonById(l)?.title}</option>)}
                 </optgroup>

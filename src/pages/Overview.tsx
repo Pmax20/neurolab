@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { LESSONS, MODULES, TASKS, lessonById, moduleById, tasksForLesson, taskById, GLOSSARY, STRUCTURES } from '../content';
 import { MODELS, modelById } from '../engine/registry';
-import { useStore } from '../store/store';
-import { dueTasks, errorPatterns, objectiveMastery } from '../store/state';
+import { setState, useStore } from '../store/store';
+import { dueTasks, errorPatterns } from '../store/state';
 import { ERROR_LABEL } from '../content/types';
 import { href } from '../ui/router';
 import { StatusBadge } from '../ui/common';
@@ -22,6 +22,22 @@ function Trace() {
   );
 }
 
+export function setFocus(id: string) { setState((x) => ({ ...x, settings: { ...x.settings, focus: id } })); }
+
+/** Fokus-Leiste: Startseite, Lernen und Üben zeigen zuerst das gewählte Fach. */
+export function FocusBar() {
+  const s = useStore((x) => x);
+  const { current } = modulesBySemester(s.settings.semester);
+  const focus = current.some((m) => m.id === s.settings.focus) ? s.settings.focus : '';
+  return (
+    <div className="focus-bar" role="group" aria-label="Fokus auf ein Fach">
+      <span className="muted">Fokus:</span>
+      <button className="chip" aria-pressed={focus === ''} onClick={() => setFocus('')}>Alle Fächer</button>
+      {current.map((m) => <button key={m.id} className="chip" aria-pressed={focus === m.id} onClick={() => setFocus(m.id)}>{MOD_ICON[m.id]} {m.title}</button>)}
+    </div>
+  );
+}
+
 export function Dashboard({ onTour }: { onTour?: () => void }) {
   const s = useStore((x) => x);
   const now = Date.now();
@@ -30,26 +46,33 @@ export function Dashboard({ onTour }: { onTour?: () => void }) {
   const completed = Object.values(s.lessons).filter((l) => l.completed).length;
   const answered = new Set(s.attempts.map((a) => a.taskId)).size;
   const sem = s.settings.semester;
-  const PATH = learningPath(sem);
   const { current, earlier, later } = modulesBySemester(sem);
-  const exams = upcomingExams(s.settings.exams);
+  const focusMod = current.find((m) => m.id === s.settings.focus);
+  // Weiterlernen: zuletzt offene Lektion (im Fokusfach), sonst die nächste offene des Lernpfads
+  const PATH = focusMod ? focusMod.lessons : learningPath(sem);
+  const lastLesson = s.recent.find((r) => r.kind === 'lesson' && !s.lessons[r.id]?.completed && (!focusMod || focusMod.lessons.includes(r.id)));
+  const nextId = lastLesson?.id ?? PATH.find((id) => !s.lessons[id]?.completed) ?? PATH[0];
+  const next = lessonById(nextId)!;
+  const started = !!s.lessons[nextId];
+  const first = s.recent.length === 0;
+  // Nächster Termin: eingetragene Klausur, sonst (1. Semester) das Chemie-Testat
+  const exams = upcomingExams(s.settings.exams).filter((e) => !focusMod || e.module === focusMod.id);
   const exam = exams[0];
   const examModule = exam ? moduleById(exam.module) : undefined;
   const examDays = exam ? daysUntil(exam.date) : 0;
   const examLessons = examModule ? examModule.lessons : [];
   const examDone = examLessons.filter((l) => s.lessons[l]?.completed).length;
-  const nextExamLesson = examLessons.find((l) => !s.lessons[l]?.completed);
-  const lastLesson = s.recent.find((r) => r.kind === 'lesson' && !s.lessons[r.id]?.completed);
-  const nextId = lastLesson?.id ?? PATH.find((id) => !s.lessons[id]?.completed) ?? PATH[0];
-  const next = lessonById(nextId)!;
-  const started = !!s.lessons[nextId];
-  const allObjectives = LESSONS.flatMap((l) => l.objectives.map((o) => ({ l, o, tasks: tasksForLesson(l.id).filter((t) => t.objective === o).map((t) => t.id) }))).filter((x) => x.tasks.length);
-  const mastered = allObjectives.filter((x) => objectiveMastery(s, x.tasks) === 'gefestigt').length;
-  const first = s.recent.length === 0;
+  const testat = sem === 1 && (!focusMod || focusMod.id === 'molecule') ? TESTATE[0] : undefined;
+  const tLessons = testat ? testatLessons(testat) : [];
+  const tDone = tLessons.filter((l) => s.lessons[l]?.completed).length;
+  const pattern = patterns.find((p) => !focusMod || focusMod.lessons.includes(p.lesson));
+  const pl = pattern ? lessonById(pattern.lesson) : undefined;
   return (
     <div>
       <h1 style={{ marginBottom: 4 }}>{s.settings.name ? `Hallo ${s.settings.name}` : first ? 'Willkommen bei NeuroLab' : 'Schön, dass du weiterlernst'}</h1>
-      <p className="muted" style={{ marginBottom: 20 }}>Dein {sem}. Semester: {current.map((m) => m.title).join(', ')}.</p>
+      <p className="muted" style={{ marginBottom: 12 }}>Dein {sem}. Semester{focusMod ? ` · Fokus auf ${focusMod.title}` : ''}.</p>
+      <FocusBar />
+      <h2 className="today-h">Heute</h2>
       <div className="hero">
         <a className="continue" href={href('lektion', next.id)}>
           <Trace />
@@ -58,88 +81,75 @@ export function Dashboard({ onTour }: { onTour?: () => void }) {
           <p>{next.overview.split('. ')[0]}.</p>
           <span className="go">{started ? 'Lektion fortsetzen' : 'Lektion öffnen'}</span>
         </a>
-        <div className="stats" aria-label="Dein Fortschritt">
-          <div><span>Abgeschlossene Lektionen</span><b>{completed}<small className="muted"> / {LESSONS.length}</small></b></div>
-          <div><span>Gefestigte Lernziele</span><b>{mastered}<small className="muted"> / {allObjectives.length}</small></b></div>
-          <div><span>Bearbeitete Aufgaben</span><b>{answered}<small className="muted"> / {TASKS.length}</small></b></div>
+        <div className="today exam-card" aria-label="Heute wichtig">
+          {exam && examModule ? (
+            <a className="today-item" href={`#/pruefung?modul=${examModule.id}`}>
+              <span className="exam-count" aria-hidden="true"><b>{examDays}</b><span>{examDays === 1 ? 'Tag' : 'Tage'}</span></span>
+              <span className="grow"><span className="t">{exam.title}</span><span className="d">{countdownText(examDays)} · {examDone} von {examLessons.length} Lektionen</span><span className="meter"><span style={{ width: `${(examDone / Math.max(1, examLessons.length)) * 100}%` }} /></span></span>
+              <span className="go-arrow" aria-hidden="true">›</span>
+            </a>
+          ) : testat ? (
+            <a className="today-item" href={`#/pruefung?testat=${testat.id}`}>
+              <span className="ico-box" aria-hidden="true">⌬</span>
+              <span className="grow"><span className="t">{testat.title}</span><span className="d">{tDone} von {tLessons.length} Lektionen · Üben und Testat simulieren</span><span className="meter"><span style={{ width: `${(tDone / Math.max(1, tLessons.length)) * 100}%` }} /></span></span>
+              <span className="go-arrow" aria-hidden="true">›</span>
+            </a>
+          ) : null}
+          <a className="today-item" href="#/pruefung?modus=wiederholen">
+            <span className="ico-box" aria-hidden="true">↻</span>
+            <span className="grow"><span className="t">{due.length ? `${due.length} ${due.length === 1 ? 'Wiederholung' : 'Wiederholungen'} fällig` : 'Keine Wiederholung fällig'}</span><span className="d">{due.length ? 'Kurz auffrischen, was du schon gelernt hast' : 'Alles aufgefrischt – weiter mit Neuem'}</span></span>
+            <span className="go-arrow" aria-hidden="true">›</span>
+          </a>
+          {pl ? (
+            <a className="today-item" href={href('lektion', pl.id)}>
+              <span className="ico-box" aria-hidden="true">!</span>
+              <span className="grow"><span className="t">Noch unsicher: {pl.title}</span><span className="d">Zuletzt öfter Fehler der Art „{ERROR_LABEL[pattern!.category]}“ – kurz die Erklärung lesen</span></span>
+              <span className="go-arrow" aria-hidden="true">›</span>
+            </a>
+          ) : (
+            <a className="today-item" href="#/pruefung">
+              <span className="ico-box" aria-hidden="true">✎</span>
+              <span className="grow"><span className="t">Üben</span><span className="d">12 Aufgaben, unsichere Themen zuerst</span></span>
+              <span className="go-arrow" aria-hidden="true">›</span>
+            </a>
+          )}
         </div>
       </div>
-      <section className="card exam-card" style={{ marginBottom: 22 }}>
-        {exam && examModule ? (
-          <div className="row" style={{ alignItems: 'center', gap: 18 }}>
-            <div className="exam-count" aria-hidden="true"><b>{examDays}</b><span>{examDays === 1 ? 'Tag' : 'Tage'}</span></div>
-            <div className="grow" style={{ flex: 1, minWidth: 200 }}>
-              <div className="muted" style={{ fontSize: '0.85rem' }}>Nächste Prüfung {countdownText(examDays)}</div>
-              <h3 style={{ margin: '2px 0 6px' }}>{exam.title}</h3>
-              <div className="progressline" style={{ margin: 0 }}><span className="muted" style={{ fontSize: '0.88rem' }}>{examDone} von {examLessons.length} Lektionen</span><div className="meter"><div style={{ width: `${(examDone / Math.max(1, examLessons.length)) * 100}%` }} /></div></div>
-            </div>
-            <div className="row">
-              {nextExamLesson && <a className="btn" href={href('lektion', nextExamLesson)}>Nächste Lektion</a>}
-              <a className="btn primary" href={`#/pruefung?modul=${examModule.id}`}>Dafür üben</a>
-            </div>
-          </div>
-        ) : (
-          <div className="row between" style={{ alignItems: 'center' }}>
-            <div><b>Klausuren und Testate eintragen</b><div className="muted" style={{ fontSize: '0.9rem' }}>Dann zeigt dir die Startseite den Countdown und was du dafür noch lernen solltest.</div></div>
-          </div>
-        )}
-        <details style={{ marginTop: 10 }}>
-          <summary className="muted" style={{ fontWeight: 400 }}>{s.settings.exams.length ? `Termine verwalten (${s.settings.exams.length})` : 'Termin hinzufügen'}</summary>
-          <div style={{ marginTop: 10 }}><ExamDates /></div>
-        </details>
-      </section>
-      <ThisWeek />
-      {sem === 1 && <TestatCard />}
       {first && onTour && (
         <div className="hint-card" style={{ marginBottom: 22 }}>
           <div><b>Neu hier?</b> Die Tour zeigt dir in einer Minute, wie Lektionen, Simulationen und Übungen funktionieren.</div>
           <button className="small primary" onClick={onTour}>Tutorial starten</button>
         </div>
       )}
-      {due.length > 0 && (
-        <div className="notice info" style={{ marginBottom: 22 }}>
-          {due.length} {due.length === 1 ? 'Aufgabe ist' : 'Aufgaben sind'} zur Wiederholung fällig. <a href="#/pruefung?modus=wiederholen">Jetzt wiederholen</a>
-        </div>
-      )}
-      {patterns.slice(0, 1).map((p) => {
-        const l = lessonById(p.lesson)!;
-        return (
-          <div key={p.lesson + p.category} className="notice info" style={{ marginBottom: 22 }}>
-            Bei „{l.title}“ gab es zuletzt mehrmals Fehler der Art „{ERROR_LABEL[p.category]}“. Vorschlag: kurz die <a href={href('lektion', l.id)}>Erklärung</a> lesen{l.models[0] ? <>, die <a href={href('sim', l.models[0])}>Simulation</a> ausprobieren</> : null} und dann <a href={`#/pruefung?lektion=${l.id}`}>Transferfragen</a> lösen.
-            <div className="muted" style={{ fontSize: '0.85rem', marginTop: 4 }}>Das ist ein Hinweis aus deinen letzten Antworten, keine Diagnose – du kannst ihn ignorieren.</div>
-          </div>
-        );
-      })}
-      <h2>Deine Fächer im {sem}. Semester</h2>
+      <h2>{focusMod ? 'Dein Fokusfach' : `Deine Fächer im ${sem}. Semester`}</h2>
       <div className="module-list" style={{ marginBottom: 14 }}>
-        {current.map((m) => {
+        {(focusMod ? [focusMod] : current).map((m) => {
           const done = m.lessons.filter((l) => s.lessons[l]?.completed).length;
           return (
             <a key={m.id} href={href('modul', m.id)}>
               <h3 style={{ marginBottom: 2 }}>{MOD_ICON[m.id]} {m.title}</h3>
-              <div className="muted" style={{ fontSize: '0.92rem' }}>{m.area}, {m.lessons.length} Lektionen</div>
+              <div className="muted" style={{ fontSize: '0.92rem' }}>{done} von {m.lessons.length} Lektionen</div>
               <div className="bar" aria-label={`${done} von ${m.lessons.length} abgeschlossen`}><div style={{ width: `${(done / m.lessons.length) * 100}%` }} /></div>
             </a>
           );
         })}
       </div>
-      {(earlier.length > 0 || later.length > 0) && (
-        <p className="muted" style={{ marginBottom: 28 }}>
+      {!focusMod && (earlier.length > 0 || later.length > 0) && (
+        <p className="muted" style={{ marginBottom: 20 }}>
           {earlier.length > 0 && <>Zum Wiederholen: {earlier.map((m, i) => <span key={m.id}>{i > 0 && ' · '}<a href={href('modul', m.id)}>{m.title}</a></span>)}. </>}
-          {later.length > 0 && <>Später im Studium: {later.map((m, i) => <span key={m.id}>{i > 0 && ' · '}<a href={href('modul', m.id)}>{m.title}</a> <small>({m.area.replace(/.*\((.*)\)/, '$1')})</small></span>)}.</>}
+          {later.length > 0 && <>Später im Studium: {later.map((m, i) => <span key={m.id}>{i > 0 && ' · '}<a href={href('modul', m.id)}>{m.title}</a></span>)}.</>}
         </p>
       )}
-      {!first && (
-        <>
-          <h2>Zuletzt geöffnet</h2>
-          <ul className="list" style={{ marginBottom: 24 }}>
-            {s.recent.filter((r) => r.kind !== 'task').slice(0, 5).map((r) => (
-              <li key={r.kind + r.id}>{r.kind === 'lesson' ? <a href={href('lektion', r.id)}>{lessonById(r.id)?.title}</a> : <a href={href('sim', r.id)}>Simulation: {modelById(r.id)?.title.split(' (')[0]}</a>}</li>
-            ))}
-          </ul>
-        </>
-      )}
-      <p className="muted" style={{ fontSize: '0.82rem' }}>NeuroLab ist ein Lernwerkzeug und kein Medizinprodukt. Es stellt keine Diagnosen und gibt keine Therapieempfehlungen; Fallbeispiele sind erfunden.</p>
+      <div className="stack" style={{ gap: 10, marginBottom: 24 }}>
+        <ThisWeek />
+        <details className="card fold">
+          <summary>Klausur- und Testattermine{s.settings.exams.length ? ` (${s.settings.exams.length})` : ''}</summary>
+          <p className="muted" style={{ fontSize: '0.9rem' }}>Eingetragene Termine erscheinen oben unter „Heute“ mit Countdown und passenden Übungen.</p>
+          <ExamDates />
+        </details>
+      </div>
+      <p className="muted" style={{ fontSize: '0.9rem' }}>{completed} von {LESSONS.length} Lektionen abgeschlossen · {answered} von {TASKS.length} Aufgaben bearbeitet · <a href="#/analyse">Fortschritt ansehen</a></p>
+      <p className="muted" style={{ fontSize: '0.82rem' }}>NeuroLab ist ein Lernwerkzeug und kein Medizinprodukt. Es stellt keine Diagnosen und gibt keine Therapieempfehlungen; Fallbeispiele sind erfunden. Die Inhalte sind KI-gestützt erstellt und mit Quellen abgeglichen – bei Abweichungen gilt deine Vorlesung.</p>
     </div>
   );
 }
@@ -164,8 +174,8 @@ function ThisWeek() {
   if (!items.length) return null;
   const fmt = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric' });
   return (
-    <section className="card" style={{ marginBottom: 22 }} aria-labelledby="week-h">
-      <h3 id="week-h" style={{ marginTop: 0 }}>Diese Woche im Stundenplan</h3>
+    <details className="card fold">
+      <summary>Diese Woche im Stundenplan ({items.length})</summary>
       <ul className="rows">
         {items.map(({ entry, first }) => {
           const l = lessonById(entry.lesson)!;
@@ -182,7 +192,7 @@ function ThisWeek() {
         })}
       </ul>
       <p className="muted" style={{ fontSize: '0.82rem', margin: '8px 0 0' }}>Nach dem veröffentlichten Themenplan WS 2026/27 der Anatomie Leipzig. Änderungen im Studierendenportal haben Vorrang.</p>
-    </section>
+    </details>
   );
 }
 
@@ -209,13 +219,14 @@ function LessonRows({ ids }: { ids: string[] }) {
   );
 }
 
-export function Library({ module }: { module?: string } = {}) {
-  const [q, setQ] = useState('');
+export function Library({ module, search, initial = '' }: { module?: string; search?: boolean; initial?: string } = {}) {
+  const [q, setQ] = useState(initial);
   const s = useStore((x) => x);
   const lastL = s.recent.find((r) => r.kind === 'lesson');
   const lastModule = lastL ? lessonById(lastL.id)?.module : undefined;
   const { current, earlier, later } = modulesBySemester(s.settings.semester);
-  const [mod, setMod] = useState<string>(module ?? (lastModule && current.some((c) => c.id === lastModule) ? lastModule : current[0]?.id) ?? MODULES[0].id);
+  const focusId = current.some((c) => c.id === s.settings.focus) ? s.settings.focus : undefined;
+  const [mod, setMod] = useState<string>(module ?? focusId ?? (lastModule && current.some((c) => c.id === lastModule) ? lastModule : current[0]?.id) ?? MODULES[0].id);
   const others = [...earlier, ...later];
   const ql = q.trim().toLowerCase();
   const hits = ql ? LESSONS.filter((l) => [l.title, l.subtitle, l.overview, ...l.terms.flatMap((t) => [t.term, ...(t.synonyms ?? [])])].join(' ').toLowerCase().includes(ql)) : [];
@@ -224,8 +235,8 @@ export function Library({ module }: { module?: string } = {}) {
   const done = m.lessons.filter((l) => s.lessons[l]?.completed).length;
   return (
     <div className="stack" style={{ maxWidth: 860 }}>
-      <div className="page-head"><div><h1>Lernen</h1></div></div>
-      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Thema oder Fachbegriff suchen …" aria-label="Lektionen durchsuchen" style={{ width: '100%' }} />
+      <div className="page-head"><div><h1>{search ? 'Suchen' : 'Lernen'}</h1>{search && <p className="muted" style={{ margin: 0 }}>Findet Lektionen und Fachbegriffe aus allen Fächern.</p>}</div>{!search && <a className="btn small" href="#/experimente">⚗ Experimente und Simulationen</a>}</div>
+      <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Thema oder Fachbegriff suchen, z. B. Osmose …" aria-label="Lektionen durchsuchen" style={{ width: '100%' }} autoFocus={search} />
       {ql ? (
         <section>
           {terms.length > 0 && (
@@ -287,34 +298,5 @@ export function ModelLibrary() {
         </details>
       ))}
     </div>
-  );
-}
-
-function TestatCard() {
-  const s = useStore((x) => x);
-  return (
-    <>
-      {TESTATE.map((t) => {
-        const ls = testatLessons(t);
-        const done = ls.filter((l) => s.lessons[l]?.completed).length;
-        const next = ls.find((l) => !s.lessons[l]?.completed);
-        return (
-          <section key={t.id} className="card" style={{ marginBottom: 22 }} aria-labelledby={`testat-${t.id}`}>
-            <div className="row between" style={{ alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1, minWidth: 220 }}>
-                <h3 id={`testat-${t.id}`} style={{ margin: '0 0 4px' }}>{t.title}</h3>
-                <div className="muted" style={{ fontSize: '0.9rem' }}>{t.subtitle}</div>
-                <div className="progressline" style={{ margin: '8px 0 0' }}><span className="muted" style={{ fontSize: '0.88rem' }}>{done} von {ls.length} Lektionen</span><div className="meter"><div style={{ width: `${(done / ls.length) * 100}%` }} /></div></div>
-              </div>
-              <div className="row">
-                {next && <a className="btn" href={href('lektion', next)}>Nächste Lektion</a>}
-                <a className="btn" href={`#/pruefung?testat=${t.id}`}>Üben</a>
-                <a className="btn primary" href={`#/pruefung?testat=${t.id}&modus=pruefen`}>Testat simulieren</a>
-              </div>
-            </div>
-          </section>
-        );
-      })}
-    </>
   );
 }
