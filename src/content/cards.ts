@@ -1,5 +1,6 @@
 import type { ModuleId } from './types';
 import { LESSONS, STRUCTURES, TERM_CARDS, lessonById } from './index';
+import { VOCAB, VOCAB_DECKS } from './vocabBook';
 
 // Karteikarten für alle Fächer – automatisch aus den geprüften Inhalten der Lektionen abgeleitet:
 // Fachbegriffe (Begriff → Definition), Strukturen (Name → Kurzbeschreibung) und Terminologie-Karten.
@@ -9,7 +10,9 @@ export interface Flashcard {
   id: string;
   module: ModuleId;
   lesson: string;
-  kind: 'Begriff' | 'Struktur' | 'Terminologie';
+  kind: 'Begriff' | 'Struktur' | 'Terminologie' | 'Vokabel';
+  /** Vokabelstapel aus Kims Terminologie-Buch (z. B. 'a', 'kons') */
+  deck?: string;
   front: string;
   hint?: string;
   back: string;
@@ -30,6 +33,10 @@ export const FLASHCARDS: Flashcard[] = (() => {
   for (const c of TERM_CARDS) {
     const lesson = c.group === 'lage' || c.group === 'ebene' ? 'lagebezeichnungen' : 'wortbildung';
     push({ id: `w:${slug(c.term)}`, module: 'term', lesson, kind: 'Terminologie', front: c.term, back: c.meaning + (c.example ? ` (z. B. ${c.example})` : '') });
+  }
+  for (const v of VOCAB) {
+    const d = VOCAB_DECKS.find((x) => x.id === v.deck)!;
+    push({ id: `v:${v.deck}:${slug(v.lex)}`, module: 'term', lesson: d.lesson, kind: 'Vokabel', deck: v.deck, front: v.lex, back: v.de, hint: `Kap. ${d.kap} · ${d.title}` });
   }
   return out;
 })();

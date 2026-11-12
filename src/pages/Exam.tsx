@@ -11,6 +11,7 @@ import { href } from '../ui/router';
 import { download } from '../ui/common';
 import { exportData, deleteAll } from '../store/store';
 import { TESTATE, testatById, testatLessons } from '../content/chem7';
+import { VOCAB_DECKS } from '../content/vocabBook';
 
 type Path = 'verstehen' | 'ueben' | 'pruefen' | 'wiederholen' | 'frei' | 'karten' | 'rechnen' | 'histo';
 
@@ -21,7 +22,7 @@ const MAIN_MODES = [
 ] as const;
 const MORE_MODES = [
   ['verstehen', 'Verstehen', 'Aufgaben mit kurzer Erklärung'],
-  ['karten', 'Karteikarten', 'Begriffe und Strukturen'],
+  ['karten', 'Karteikarten', 'Begriffe, Strukturen, Buch-Vokabeln'],
   ['rechnen', 'Rechnen', 'Rechentrainer mit Einheiten'],
   ['histo', 'Histologie', 'Präparate bestimmen'],
 ] as const;
@@ -44,6 +45,8 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
   const [deadline, setDeadline] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now());
   const [cardQueue, setCardQueue] = useState<string[] | null>(null);
+  const [deck, setDeck] = useState(query.get('stapel') ?? '');
+  const [reverse, setReverse] = useState(false);
   const [lessons, setLessons] = useState<string[]>(preTestat ? testatLessons(preTestat) : preLesson ? [preLesson] : preModule ? [...(MODULES.find((m) => m.id === preModule)?.lessons ?? [])] : qm === 'wiederholen' ? [] : [...(MODULES.find((m) => m.id === s.settings.focus)?.lessons ?? [])]);
   const [levels, setLevels] = useState<TaskLevel[]>([]);
   const [queue, setQueue] = useState<string[] | null>(null);
@@ -72,7 +75,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
     const mods = [...new Set(scores.flatMap((x) => taskById(x.id)?.lessons ?? []).map((l) => lessonById(l)?.module).filter(Boolean) as string[])];
     setState((st) => ({ ...st, tests: [...st.tests, { t: Date.now(), modules: mods, n: scores.length, score: scores.reduce((a, b) => a + b.score, 0) / scores.length, timed: !!timed && path === 'pruefen' }].slice(-100) }));
   }, [queue, idx, scores, path, timed]);
-  const cardPool = useMemo(() => FLASHCARDS.filter((c) => !lessons.length || lessons.includes(c.lesson)), [lessons]);
+  const cardPool = useMemo(() => deck ? FLASHCARDS.filter((c) => c.kind === 'Vokabel' && (deck === 'alle' || c.deck === deck)) : FLASHCARDS.filter((c) => !lessons.length || lessons.includes(c.lesson)), [lessons, deck]);
   const cardsDue = dueCards(s, cardPool.map((c) => c.id), Date.now());
   useEffect(() => {
     if (!deadline || !queue) return;
@@ -81,7 +84,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
   }, [deadline, queue]);
 
   const start = () => {
-    if (path === 'karten') { setCardQueue(cardsDue.slice(0, 20)); return; }
+    if (path === 'karten') { setCardQueue((deck ? shuffle(cardsDue) : cardsDue).slice(0, 20)); return; }
     const rank = { wissen: 1, verstaendnis: 1, anwendung: 2, analyse: 3, verknuepfung: 3 } as const;
     const ids = (path === 'pruefen' ? shuffle(pool).slice(0, 10) : path === 'ueben' ? pool.slice(0, 12)
       : path === 'rechnen' ? shuffle(pool).slice(0, 10).sort((a, b) => rank[a.level] - rank[b.level]) // Schwierigkeit steigt schrittweise
@@ -94,7 +97,7 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
     setNow(Date.now());
   };
 
-  if (cardQueue) return <CardSession ids={cardQueue} onExit={() => setCardQueue(null)} onAgain={() => setCardQueue(dueCards(s, cardPool.map((c) => c.id), Date.now()).slice(0, 20))} />;
+  if (cardQueue) return <CardSession reverse={reverse} ids={cardQueue} onExit={() => setCardQueue(null)} onAgain={() => setCardQueue(dueCards(s, cardPool.map((c) => c.id), Date.now()).slice(0, 20))} />;
 
   if (queue) {
     const t = taskById(queue[idx]);
@@ -175,7 +178,27 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
       )}
       {path === 'histo' && histoTab === 'eigene' && <OwnSlides />}
       {path === 'rechnen' && <p className="muted" style={{ margin: 0 }}>Jede Runde: 10 Aufgaben mit neuen Zahlen, von Stufe 1 bis 3 steigend. Geprüft werden gesuchte Größe, Formel, Ergebnis und Einheit.</p>}
-      {path !== 'wiederholen' && !(path === 'histo' && histoTab === 'eigene') && (
+      {path === 'karten' && (
+        <section className="card">
+          <label className="field" style={{ marginBottom: 6 }}>
+            <span className="lab"><b>Stapel</b></span>
+            <select value={deck} onChange={(e) => setDeck(e.target.value)}>
+              <option value="">Begriffe und Strukturen nach Thema</option>
+              <optgroup label="Vokabeln aus dem Terminologie-Buch (fett gedruckt)">
+                <option value="alle">Alle Buch-Vokabeln ({FLASHCARDS.filter((c) => c.kind === 'Vokabel').length})</option>
+                {VOCAB_DECKS.map((d) => <option key={d.id} value={d.id}>Kap. {d.kap} · {d.title} ({FLASHCARDS.filter((c) => c.deck === d.id).length})</option>)}
+              </optgroup>
+            </select>
+          </label>
+          {deck && (
+            <div className="seg" role="group" aria-label="Abfragerichtung" style={{ marginTop: 6 }}>
+              <button aria-pressed={!reverse} onClick={() => setReverse(false)}>Latein → Deutsch</button>
+              <button aria-pressed={reverse} onClick={() => setReverse(true)}>Deutsch → Latein</button>
+            </div>
+          )}
+        </section>
+      )}
+      {path !== 'wiederholen' && !(path === 'histo' && histoTab === 'eigene') && !(path === 'karten' && deck) && (
         <section className="card">
           <label className="field" style={{ marginBottom: 6 }}>
             <span className="lab"><b>Thema</b></span>
@@ -242,11 +265,12 @@ export function ExamPage({ query }: { query: URLSearchParams }) {
 
 // ---------------------------------------------------------------------------
 
-function CardSession({ ids, onExit, onAgain }: { ids: string[]; onExit: () => void; onAgain: () => void }) {
+function CardSession({ ids, onExit, onAgain, reverse = false }: { ids: string[]; onExit: () => void; onAgain: () => void; reverse?: boolean }) {
   const [i, setI] = useState(0);
   const [flip, setFlip] = useState(false);
   const [res, setRes] = useState<number[]>([]);
-  const c: Flashcard | undefined = FLASHCARDS.find((x) => x.id === ids[i]);
+  const raw: Flashcard | undefined = FLASHCARDS.find((x) => x.id === ids[i]);
+  const c = raw && reverse && raw.kind === 'Vokabel' ? { ...raw, front: raw.back, back: raw.front } : raw;
   if (!c) {
     const known = res.filter((x) => x === 1).length;
     return (

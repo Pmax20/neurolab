@@ -148,3 +148,14 @@ Haut und Drüsen (Histologie, 4.–14.1.2027), Rumpfwand (7.–14.1.), obere Ext
 - **Entwickleransicht** (`settings.expert`, Einstellungen → Darstellung): Prüfstatus-Schilder, Hinweise „noch nicht fachlich freigegeben“
   und die Verwaltungsseiten (Prüfbericht, Freigabe, Quellen, Modellbibliothek) erscheinen nur dort. Ein Hinweis zur KI-Erstellung steht
   dauerhaft am Ende der Startseite.
+
+## Terminologie nach Kims Buch (Stand 12.11.2026)
+
+- Abgleich mit Kims Terminologie-Buch Kap. 3.2–3.7 (Fotos): Lektionen `deklinationen` und `adjektive-termini` (`src/content/term2.ts`)
+  nutzen jetzt die Namen des Buchs (a-, o-, u-, e- und Gemischte Deklination statt 1.–5.), unterscheiden konsonantische Stämme
+  (Gen. Pl. -um, Neutrum Pl. -a) und i-Stämme (-ium, -ia), nennen die Ausnahmen (os, cor, vas; griechische -es/-as und -e;
+  -er, -on, diameter, virus, manus, cornu/genu) und die Adjektivgruppen (a/o mit -er; zweiendig -is/-e i-Schema, -or/-us
+  konsonantisch; einendig -ns/-x, -ceps) samt Kongruenz-Übersicht (Nennform). Neue Aufgaben und Quizfragen dazu.
+- `src/content/vocabBook.ts`: die im Buch fett gedruckten, klausurrelevanten Vokabeln (338, in 8 Stapeln nach Kapitel) als
+  Karteikarten (Art „Vokabel“). Unter Üben → Mehr Übungsarten → Karteikarten → „Stapel“ wählbar, Richtung Latein↔Deutsch umschaltbar;
+  Direktlink `#/pruefung?modus=karten&stapel=<id>`; Knöpfe dazu in den beiden Lektionen.

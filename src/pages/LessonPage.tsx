@@ -21,6 +21,7 @@ import * as K2 from './views/semester2Views';
 import { relevanceOf } from '../content/curriculum';
 import { TopicView } from './views/topicViews';
 import { TOPIC_EXTRAS } from '../content/topics';
+import { VOCAB_DECKS } from '../content/vocabBook';
 
 const VIEWS: Record<string, (l: Lesson) => ReactNode> = {
   motion: () => <K2.MotionView />, work: () => <K2.WorkView />, pressure: () => <K2.PressureView />, periodic: () => <K2.PeriodicView />, balance: () => <K2.BalanceView />, microscopy: () => <K2.MicroscopyView />,
@@ -82,7 +83,7 @@ export function RelevanceChip({ lesson, semesters }: { lesson: string; semesters
   );
 }
 
-const ABBR = /(?:^|[\s(])(?:z|B|ca|bzw|d|h|u|a|vgl|etc|Abb|Nr|s|o|ggf|evtl|bspw|inkl|max|min|sog|v|Chr|Kap|S|N|M|A|Lig|[A-Z])\.$|\d\.$/;
+const ABBR = /(?:^|[\s(])(?:z|B|ca|bzw|d|h|u|a|vgl|etc|Abb|Nr|s|o|ggf|evtl|bspw|inkl|max|min|sog|v|Chr|Kap|S|N|M|A|Lig|Gen|Nom|Sg|Pl|Dekl|lat|griech|[A-Z])\.$|\d\.$/;
 /** Kernaussage eines Textes: erster Satz (bei sehr kurzen Sätzen auch der zweite). Abkürzungen wie „z. B.“, „ca.“ oder Ordnungszahlen beenden keinen Satz. */
 export function firstSentence(t: string) {
   const re = /[.!?](?=\s+[A-ZÄÖÜ„(0-9])/g;
@@ -100,7 +101,7 @@ export function firstSentence(t: string) {
 
 /** „Das Wichtigste in 1 Minute“: Kernsätze aus den Mechanismusschritten, zum schnellen Wiederholen vor dem Testat. */
 function QuickRecap({ lesson: l }: { lesson: Lesson }) {
-  const points = l.mechanism.slice(0, 6);
+  const points = l.mechanism.slice(0, l.mechanism.length <= 9 ? 9 : 6);
   return (
     <details className="card fold quick-recap" open>
       <summary>Das Wichtigste in 1 Minute</summary>
@@ -169,6 +170,7 @@ export function LessonPage({ id }: { id: string }) {
         {l.prerequisites.length > 0 && <p style={{ margin: '0 0 6px' }}>Baut auf: {l.prerequisites.map((p) => <button key={p} className="small" style={{ margin: 2 }} onClick={() => setPeek(p)}>{lessonById(p)?.title}</button>)}</p>}
         <p style={{ margin: 0 }}>Führt weiter zu: {l.links.filter((x) => !l.prerequisites.includes(x)).map((p) => <button key={p} className="small" style={{ margin: 2 }} onClick={() => setPeek(p)}>{lessonById(p)?.title}</button>)}</p>
         {peek && <div style={{ marginTop: 10 }}><Peek id={peek} onClose={() => setPeek(null)} /></div>}
+        {VOCAB_DECKS.some((d) => d.lesson === l.id) && <p style={{ margin: '10px 0 0' }}>Vokabeln aus dem Buch: {VOCAB_DECKS.filter((d) => d.lesson === l.id).map((d) => <a key={d.id} className="btn small" style={{ margin: 2 }} href={`#/pruefung?modus=karten&stapel=${d.id}`}>Kap. {d.kap} {d.title.split(' (')[0]}</a>)}</p>}
         {guided.length > 0 && <p style={{ margin: '10px 0 0' }}>Experimente: {guided.map((g) => <a key={g.id} className="btn small" style={{ margin: 2 }} href={href('experimente', g.id)}>{g.title}</a>)}</p>}
       </section>
       <details className="card">
